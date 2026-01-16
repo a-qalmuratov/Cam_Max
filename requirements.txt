@@ -1,0 +1,24 @@
+# Telegram Bot
+python-telegram-bot==20.7
+python-dotenv==1.0.0
+
+# Universal Camera Integration
+opencv-python==4.8.1.78
+ffmpeg-python==0.2.0
+requests==2.31.0
+urllib3==2.1.0
+
+# AI & Computer Vision (YOLOv8 Lightweight)
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics==8.1.0  # YOLOv8
+numpy>=1.24.0
+pillow>=10.0.0
+
+# Database (SQLite - local)
+# No external dependencies needed, comes with Python
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+aiohttp==3.9.1
