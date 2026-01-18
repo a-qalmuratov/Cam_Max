@@ -170,9 +170,10 @@ class VideoRecorder:
             logger.error(f"Error saving segment info: {e}")
     
     def extract_clip(self, camera_id: int, start_time: datetime, end_time: datetime) -> Optional[str]:
-        """Extract video clip from archive for given time range."""
+        """Extract video clip from archive for given time range using ffmpeg."""
         try:
-            import cv2
+            import subprocess
+            import shutil
             
             # Find relevant segment files
             segments = self._find_segments(camera_id, start_time, end_time)
@@ -188,19 +189,82 @@ class VideoRecorder:
             clip_filename = f"clip_{camera_id}_{start_time.strftime('%Y%m%d_%H%M%S')}.mp4"
             clip_path = os.path.join(clip_dir, clip_filename)
             
-            # If single segment, try to copy or trim
-            if len(segments) == 1 and os.path.exists(segments[0]):
-                # For simplicity, just copy the segment
-                import shutil
-                shutil.copy(segments[0], clip_path)
+            # Check if ffmpeg is available
+            ffmpeg_available = False
+            try:
+                subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
+                ffmpeg_available = True
+            except:
+                logger.warning("ffmpeg not found, using simple copy")
+            
+            if len(segments) == 1:
+                # Single segment - trim if ffmpeg available
+                segment_path = segments[0]
+                
+                if ffmpeg_available:
+                    # Parse segment start time from filename
+                    try:
+                        seg_filename = os.path.basename(segment_path)
+                        time_str = seg_filename.replace('.mp4', '')
+                        date_str = os.path.basename(os.path.dirname(segment_path))
+                        seg_start = datetime.strptime(f"{date_str} {time_str}", '%Y-%m-%d %H-%M-%S')
+                        
+                        # Calculate offset
+                        offset_seconds = max(0, (start_time - seg_start).total_seconds())
+                        duration_seconds = (end_time - start_time).total_seconds()
+                        
+                        # Trim with ffmpeg
+                        cmd = [
+                            'ffmpeg', '-y',
+                            '-ss', str(offset_seconds),
+                            '-i', segment_path,
+                            '-t', str(duration_seconds),
+                            '-c', 'copy',
+                            clip_path
+                        ]
+                        subprocess.run(cmd, capture_output=True, check=True)
+                        logger.info(f"Extracted clip with ffmpeg: {clip_path}")
+                        return clip_path
+                    except Exception as e:
+                        logger.warning(f"ffmpeg trim failed: {e}, falling back to copy")
+                
+                # Fallback: just copy
+                shutil.copy(segment_path, clip_path)
                 return clip_path
             
-            # For multiple segments, concatenate
-            # TODO: Implement proper concatenation with ffmpeg
-            if segments and os.path.exists(segments[0]):
-                import shutil
-                shutil.copy(segments[0], clip_path)
-                return clip_path
+            else:
+                # Multiple segments - concatenate with ffmpeg
+                if ffmpeg_available:
+                    try:
+                        # Create concat file list
+                        concat_list_path = os.path.join(clip_dir, f"concat_{camera_id}.txt")
+                        with open(concat_list_path, 'w') as f:
+                            for seg in segments:
+                                f.write(f"file '{seg}'\n")
+                        
+                        # Concatenate with ffmpeg
+                        cmd = [
+                            'ffmpeg', '-y',
+                            '-f', 'concat',
+                            '-safe', '0',
+                            '-i', concat_list_path,
+                            '-c', 'copy',
+                            clip_path
+                        ]
+                        subprocess.run(cmd, capture_output=True, check=True)
+                        
+                        # Clean up concat list
+                        os.remove(concat_list_path)
+                        
+                        logger.info(f"Concatenated {len(segments)} segments to: {clip_path}")
+                        return clip_path
+                    except Exception as e:
+                        logger.warning(f"ffmpeg concat failed: {e}, falling back to first segment")
+                
+                # Fallback: just copy first segment
+                if segments and os.path.exists(segments[0]):
+                    shutil.copy(segments[0], clip_path)
+                    return clip_path
             
             return None
             

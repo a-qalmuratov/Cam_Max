@@ -1,6 +1,6 @@
 """
 Video viewing system with real-time and archive playback.
-Production-ready with proper camera connection handling.
+Production-ready with proper camera connection and access control.
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from database.models import db
 from camera.stream_manager import stream_manager
 from utils.logger import logger
+from utils.access_control import access_control, time_helper
 import io
 import os
 import cv2
@@ -26,11 +27,11 @@ class VideoViewHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃     👁️ VIDEO KO'RISH      ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "Rejimni tanlang:\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━"
+            "━━━━━━━━━━━━\n"
+            "     👁️ VIDEO KO'RISH      \n"
+            "━━━━━━━━━━━━\n\n"
+            "Rejimni tanlan:\n\n"
+            "━━━━━━━━━━━━"
         )
         
         keyboard = [
@@ -38,7 +39,7 @@ class VideoViewHandler:
             [InlineKeyboardButton("📅 Vaqt Bo'yicha Ko'rish", callback_data="view_archive")],
             [InlineKeyboardButton("⭐ Sevimli Momentlar", callback_data="view_bookmarks")],
             [InlineKeyboardButton("📥 Yuklab Olish", callback_data="view_download")],
-            [InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]
+            [InlineKeyboardButton("« Bas Menyu", callback_data="menu_main")]
         ]
         
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -55,20 +56,20 @@ class VideoViewHandler:
         
         if not cameras:
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃      🔴 REAL-TIME         ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-                "📭 Kamera yo'q!\n\n"
+                "━━━━━━━━━━━━\n"
+                "      🔴 REAL-TIME         \n"
+                "━━━━━━━━━━━━\n\n"
+                "📭 Kamera joq!\n\n"
                 "Avval kamera qo'shing."
             )
             keyboard = [[InlineKeyboardButton("« Orqaga", callback_data="menu_view")]]
         else:
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃      🔴 REAL-TIME         ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-                "Kamerani tanlang:\n\n"
-                "━━━━━━━━━━━━━━━━━━━━━━━━━"
+                "━━━━━━━━━━━━\n"
+                "      🔴 REAL-TIME         \n"
+                "━━━━━━━━━━━━\n\n"
+                "Kamerani tanlan:\n\n"
+                "━━━━━━━━━━━━"
             )
             
             keyboard = []
@@ -85,27 +86,24 @@ class VideoViewHandler:
     async def capture_realtime(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Capture and send real-time snapshot from camera."""
         query = update.callback_query
-        await query.answer()
+        await query.answer("📸 Suwret alinmoqda...")
         
         camera_id = int(query.data.split('_')[-1])
-        camera = db.get_camera(camera_id)
-        
-        if not camera:
-            await query.edit_message_text("❌ Kamera topilmadi!")
-            return
-        
-        # Verify ownership
         user_id = update.effective_user.id
-        user = db.get_user(user_id)
-        if camera.get('organization_id') != user.get('organization_id'):
-            await query.edit_message_text("❌ Bu kamera sizga tegishli emas!")
+        
+        # ACCESS CONTROL CHECK
+        has_access, error_msg = access_control.check_camera_access(user_id, camera_id)
+        if not has_access:
+            await query.edit_message_text(error_msg)
             return
+        
+        camera = db.get_camera(camera_id)
         
         # Show loading message
         await query.edit_message_text(
-            f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃   📸 {camera['name'][:18]:<18} ┃\n"
-            f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            f"━━━━━━━━━━━━\n"
+            f"   📸 {camera['name'][:18]:<18} \n"
+            f"━━━━━━━━━━━━\n\n"
             f"⏳ Kameraga ulanilmoqda...\n"
             f"📍 {camera['ip_address']}:{camera['port']}"
         )
@@ -122,12 +120,12 @@ class VideoViewHandler:
             
             if cam_client is None or not cam_client.is_connected:
                 text = (
-                    f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                    f"┃   ❌ ULANISH XATOSI       ┃\n"
-                    f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                    f"━━━━━━━━━━━━\n"
+                    f"   ❌ ULANISH XATOSI       \n"
+                    f"━━━━━━━━━━━━\n\n"
                     f"📹 {camera['name']}\n"
                     f"📍 {camera['ip_address']}:{camera['port']}\n\n"
-                    f"━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"━━━━━━━━━━━━\n\n"
                     f"❌ Kameraga ulanib bo'lmadi!\n\n"
                     f"Tekshiring:\n"
                     f"• IP manzil to'g'rimi?\n"
@@ -137,7 +135,7 @@ class VideoViewHandler:
                 )
                 keyboard = [
                     [InlineKeyboardButton("🔄 Qayta Urinish", callback_data=f"realtime_{camera_id}")],
-                    [InlineKeyboardButton("⚙️ Sozlamalar", callback_data=f"cam_detail_{camera_id}")],
+                    [InlineKeyboardButton("⚙️ Sazlawlar", callback_data=f"cam_detail_{camera_id}")],
                     [InlineKeyboardButton("« Kameralar", callback_data="view_realtime")]
                 ]
                 await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -188,16 +186,16 @@ class VideoViewHandler:
             
             # Show success with refresh button
             text = (
-                f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                f"┃   ✅ RASM YUBORILDI       ┃\n"
-                f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                f"━━━━━━━━━━━━\n"
+                f"   ✅ RASM YUBORILDI       \n"
+                f"━━━━━━━━━━━━\n\n"
                 f"📹 {camera['name']}\n"
                 f"⏰ {timestamp}\n"
                 f"📊 {resolution}"
             )
             
             keyboard = [
-                [InlineKeyboardButton("🔄 Yangilash", callback_data=f"realtime_{camera_id}")],
+                [InlineKeyboardButton("🔄 Janalash", callback_data=f"realtime_{camera_id}")],
                 [InlineKeyboardButton("⭐ Saqlash", callback_data=f"bookmark_save_{camera_id}")],
                 [InlineKeyboardButton("« Kameralar", callback_data="view_realtime")]
             ]
@@ -211,12 +209,12 @@ class VideoViewHandler:
             db.update_camera_status(camera_id, 'inactive')
             
             text = (
-                f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                f"┃   ❌ XATOLIK              ┃\n"
-                f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                f"━━━━━━━━━━━━\n"
+                f"   ❌ XATOLIK              \n"
+                f"━━━━━━━━━━━━\n\n"
                 f"📹 {camera['name']}\n\n"
                 f"❌ {str(e)}\n\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"━━━━━━━━━━━━\n\n"
                 f"💡 Maslahat:\n"
                 f"• Kamera IP ni tekshiring\n"
                 f"• Login/parolni tekshiring\n"
@@ -235,11 +233,11 @@ class VideoViewHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃     📅 VAQT TANLASH       ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            "     📅 VAQT TANLASH       \n"
+            "━━━━━━━━━━━━\n\n"
             "Tezkor tanlov:\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━"
+            "━━━━━━━━━━━━"
         )
         
         keyboard = [
@@ -308,12 +306,12 @@ class VideoViewHandler:
         label = context.user_data.get('archive_label', '')
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃     📹 KAMERA TANLASH     ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            "     📹 KAMERA TANLASH     \n"
+            "━━━━━━━━━━━━\n\n"
             f"📅 {label}\n"
             f"⏰ {start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━"
+            "━━━━━━━━━━━━"
         )
         
         keyboard = []
@@ -340,9 +338,9 @@ class VideoViewHandler:
         
         # Show processing message
         await query.edit_message_text(
-            f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃   ⏳ TAYYORLANMOQDA       ┃\n"
-            f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            f"━━━━━━━━━━━━\n"
+            f"   ⏳ TAYYORLANMOQDA       \n"
+            f"━━━━━━━━━━━━\n\n"
             f"📹 {camera['name']}\n"
             f"📅 {label}\n\n"
             f"⏳ Video qayta ishlanmoqda..."
@@ -365,27 +363,27 @@ class VideoViewHandler:
                     )
                 
                 text = (
-                    f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                    f"┃   ✅ VIDEO YUBORILDI      ┃\n"
-                    f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                    f"━━━━━━━━━━━━\n"
+                    f"   ✅ VIDEO YUBORILDI      \n"
+                    f"━━━━━━━━━━━━\n\n"
                     f"📹 {camera['name']}\n"
                     f"📅 {label}"
                 )
             else:
                 text = (
-                    f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                    f"┃   📭 ARXIV BO'SH          ┃\n"
-                    f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                    f"━━━━━━━━━━━━\n"
+                    f"   📭 ARXIV BO'SH          \n"
+                    f"━━━━━━━━━━━━\n\n"
                     f"📹 {camera['name']}\n"
                     f"📅 {label}\n\n"
-                    f"Bu vaqt oralig'ida video yo'q.\n\n"
+                    f"Bul waqıt aralıǵında video joq.\n\n"
                     f"💡 Video yozish uchun kamerani\n"
                     f"   ON holatiga o'tkazing."
                 )
             
             keyboard = [
                 [InlineKeyboardButton("📅 Boshqa Vaqt", callback_data="view_archive")],
-                [InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]
+                [InlineKeyboardButton("« Bas Menyu", callback_data="menu_main")]
             ]
             
             await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -393,9 +391,9 @@ class VideoViewHandler:
         except Exception as e:
             logger.error(f"Archive extract error: {e}")
             text = (
-                f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                f"┃   ❌ XATOLIK              ┃\n"
-                f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                f"━━━━━━━━━━━━\n"
+                f"   ❌ XATOLIK              \n"
+                f"━━━━━━━━━━━━\n\n"
                 f"{str(e)}"
             )
             keyboard = [[InlineKeyboardButton("« Orqaga", callback_data="view_archive")]]
@@ -403,40 +401,226 @@ class VideoViewHandler:
     
     @staticmethod
     async def show_bookmarks(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Show saved bookmarks."""
+        """Show saved bookmarks from database."""
         query = update.callback_query
         await query.answer()
         
         user_id = update.effective_user.id
         
-        # Get bookmarks from database (placeholder)
-        bookmarks = []  # TODO: Implement bookmark storage
+        # Get bookmarks from database
+        bookmarks = db.get_bookmarks(user_id)
         
         if not bookmarks:
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃     ⭐ SEVIMLILAR         ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-                "📭 Saqlangan momentlar yo'q.\n\n"
-                "Real-time ko'rishda ⭐ Saqlash\n"
-                "tugmasini bosing."
+                "━━━━━━━━━━━━\n"
+                "     ⭐ QIZIQLILAR         \n"
+                "━━━━━━━━━━━━\n\n"
+                "📭 Saqlangan momentler joq.\n\n"
+                "Real-time koriwde ⭐ Saqlaw\n"
+                "tuymesin basin."
             )
-            keyboard = [[InlineKeyboardButton("« Orqaga", callback_data="menu_view")]]
+            keyboard = [[InlineKeyboardButton("« Arqaga", callback_data="menu_view")]]
         else:
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃     ⭐ SEVIMLILAR         ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                "━━━━━━━━━━━━\n"
+                "     ⭐ QIZIQLILAR         \n"
+                "━━━━━━━━━━━━\n\n"
+                f"📊 Jami: {len(bookmarks)} ta\n\n"
+                "━━━━━━━━━━━━\n"
             )
             
             keyboard = []
-            for bm in bookmarks:
-                btn_text = f"📹 {bm['timestamp']} - {bm['camera_name']}"
-                keyboard.append([InlineKeyboardButton(btn_text, callback_data=f"bookmark_{bm['id']}")])
+            for bm in bookmarks[:10]:  # Limit to 10
+                camera_name = bm.get('camera_name', 'Kamera')
+                timestamp = str(bm.get('timestamp', ''))[:16]
+                btn_text = f"📹 {camera_name} - {timestamp}"
+                keyboard.append([
+                    InlineKeyboardButton(btn_text, callback_data=f"bookmark_view_{bm['id']}"),
+                    InlineKeyboardButton("🗑️", callback_data=f"bookmark_delete_{bm['id']}")
+                ])
             
-            keyboard.append([InlineKeyboardButton("« Orqaga", callback_data="menu_view")])
+            keyboard.append([InlineKeyboardButton("« Arqaga", callback_data="menu_view")])
         
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    
+    @staticmethod
+    async def save_bookmark(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Save current moment as bookmark."""
+        query = update.callback_query
+        await query.answer("⭐ Saqlanmoqda...")
+        
+        camera_id = int(query.data.split('_')[-1])
+        user_id = update.effective_user.id
+        
+        # ACCESS CONTROL CHECK
+        has_access, error_msg = access_control.check_camera_access(user_id, camera_id)
+        if not has_access:
+            await query.edit_message_text(error_msg)
+            return
+        
+        camera = db.get_camera(camera_id)
+        if not camera:
+            await query.edit_message_text("❌ Kamera tabilmadi!")
+            return
+        
+        # Save bookmark with UTC timestamp (standardized)
+        utc_now = time_helper.now_utc()
+        timestamp = utc_now.strftime('%Y-%m-%d %H:%M:%S')
+        display_time = time_helper.format_for_display(utc_now)
+        name = f"{camera['name']} - {display_time[:10]}"
+        
+        db.add_bookmark(
+            user_id=user_id,
+            camera_id=camera_id,
+            timestamp=timestamp,
+            name=name
+        )
+        
+        text = (
+            "━━━━━━━━━━━━\n"
+            "   ⭐ SAQLANDI             \n"
+            "━━━━━━━━━━━━\n\n"
+            f"📹 {camera['name']}\n"
+            f"⏰ {timestamp}\n\n"
+            "Qiziqlilar boliminde kore alasiz."
+        )
+        
+        keyboard = [
+            [InlineKeyboardButton("⭐ Qiziqlilar", callback_data="view_bookmarks")],
+            [InlineKeyboardButton("🔄 Jana Suwret", callback_data=f"realtime_{camera_id}")],
+            [InlineKeyboardButton("« Arqaga", callback_data="view_realtime")]
+        ]
+        
+        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    
+    @staticmethod
+    async def delete_bookmark(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Delete a bookmark."""
+        query = update.callback_query
+        
+        bookmark_id = int(query.data.split('_')[-1])
+        user_id = update.effective_user.id
+        
+        deleted = db.delete_bookmark(bookmark_id, user_id)
+        
+        if deleted:
+            await query.answer("🗑️ Oshirildi!")
+        else:
+            await query.answer("❌ Qatelik!")
+        
+        # Refresh bookmarks list
+        await VideoViewHandler.show_bookmarks(update, context)
+    
+    @staticmethod
+    async def view_bookmark(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """View bookmark details."""
+        query = update.callback_query
+        await query.answer()
+        
+        bookmark_id = int(query.data.split('_')[-1])
+        user_id = update.effective_user.id
+        
+        # Get bookmark details
+        bookmarks = db.get_bookmarks(user_id)
+        bookmark = next((b for b in bookmarks if b['id'] == bookmark_id), None)
+        
+        if not bookmark:
+            await query.edit_message_text("❌ Bookmark tabilmadi!")
+            return
+        
+        text = (
+            "━━━━━━━━━━━━\n"
+            "   ⭐ QIZIQLIQ            \n"
+            "━━━━━━━━━━━━\n\n"
+            f"📹 Kamera: {bookmark.get('camera_name', 'N/A')}\n"
+            f"⏰ Waqit: {bookmark.get('timestamp', 'N/A')}\n"
+            f"📅 Saqlandi: {str(bookmark.get('created_at', ''))[:10]}\n"
+        )
+        
+        camera_id = bookmark.get('camera_id')
+        keyboard = [
+            [InlineKeyboardButton("📹 Kamerani Kor", callback_data=f"realtime_{camera_id}")],
+            [InlineKeyboardButton("🗑️ O'shir", callback_data=f"bookmark_delete_{bookmark_id}")],
+            [InlineKeyboardButton("« Qiziqlilar", callback_data="view_bookmarks")]
+        ]
+        
+        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    
+    @staticmethod
+    async def show_custom_time_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Show custom time input prompt."""
+        query = update.callback_query
+        await query.answer()
+        
+        text = (
+            "━━━━━━━━━━━━\n"
+            "   ✍️ ANIQ WAQT           \n"
+            "━━━━━━━━━━━━\n\n"
+            "Waqt oralig'in jazin:\n\n"
+            "Format: SAAT:MINUT - SAAT:MINUT\n"
+            "Misal: 09:00 - 12:00\n\n"
+            "━━━━━━━━━━━━\n"
+            "❌ Biykarlaw: /cancel"
+        )
+        
+        await query.edit_message_text(text)
+        return TIME_RANGE_INPUT
+    
+    @staticmethod
+    async def handle_custom_time_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle custom time range input."""
+        text = update.message.text.strip()
+        
+        try:
+            # Parse time range like "09:00 - 12:00"
+            parts = text.replace(' ', '').split('-')
+            if len(parts) != 2:
+                raise ValueError("Qate format")
+            
+            start_str, end_str = parts
+            
+            now = datetime.now()
+            start_time = datetime.strptime(start_str, '%H:%M').replace(
+                year=now.year, month=now.month, day=now.day
+            )
+            end_time = datetime.strptime(end_str, '%H:%M').replace(
+                year=now.year, month=now.month, day=now.day
+            )
+            
+            context.user_data['archive_start'] = start_time
+            context.user_data['archive_end'] = end_time
+            context.user_data['archive_label'] = f"{start_str} - {end_str}"
+            
+            # Show camera selection
+            user_id = update.effective_user.id
+            user = db.get_user(user_id)
+            cameras = db.get_cameras_by_organization(user.get('organization_id', 0)) or []
+            
+            text = (
+                "━━━━━━━━━━━━\n"
+                "     📹 KAMERA TANLAW     \n"
+                "━━━━━━━━━━━━\n\n"
+                f"📅 {start_str} - {end_str}\n\n"
+                "━━━━━━━━━━━━"
+            )
+            
+            keyboard = []
+            for cam in cameras:
+                btn_text = f"📹 {cam['name']}"
+                keyboard.append([InlineKeyboardButton(btn_text, callback_data=f"archive_cam_{cam['id']}")])
+            
+            keyboard.append([InlineKeyboardButton("« Arqaga", callback_data="view_archive")])
+            
+            await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+            return ConversationHandler.END
+            
+        except Exception as e:
+            await update.message.reply_text(
+                f"❌ Qate format!\n\n"
+                f"To'g'ri format: 09:00 - 12:00\n\n"
+                "/cancel - Biykarlaw"
+            )
+            return TIME_RANGE_INPUT
     
     @staticmethod
     async def show_download_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -445,21 +629,25 @@ class VideoViewHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃     📥 YUKLAB OLISH       ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "Video yuklab olish uchun avval\n"
-            "📅 Vaqt bo'yicha ko'rish orqali\n"
-            "kerakli videoni tanlang."
+            "━━━━━━━━━━━━\n"
+            "     📥 JUKLEP ALIW       \n"
+            "━━━━━━━━━━━━\n\n"
+            "Video juklep aliw ushin avval\n"
+            "📅 Waqt boyinsha koriw arqali\n"
+            "kerikli videoni tanlan."
         )
         
         keyboard = [
-            [InlineKeyboardButton("📅 Vaqt Tanlash", callback_data="view_archive")],
-            [InlineKeyboardButton("« Orqaga", callback_data="menu_view")]
+            [InlineKeyboardButton("📅 Waqt Tanlaw", callback_data="view_archive")],
+            [InlineKeyboardButton("« Arqaga", callback_data="menu_view")]
         ]
         
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
+# Conversation states export
+CUSTOM_TIME_INPUT = TIME_RANGE_INPUT
+
 # Export
 video_view_handler = VideoViewHandler()
+

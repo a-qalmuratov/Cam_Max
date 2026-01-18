@@ -1,5 +1,5 @@
 """
-Main menu system with premium inline keyboard UI.
+Main menu system with clean inline keyboard UI.
 Uses central language file for all texts.
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -10,7 +10,7 @@ from utils.messages import msg
 
 
 class MainMenuHandler:
-    """Handle main menu navigation with premium UI."""
+    """Handle main menu navigation with clean UI."""
     
     @staticmethod
     async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -21,8 +21,8 @@ class MainMenuHandler:
         user = db.get_user(user_id)
         if not user:
             text = (
-                "❌ Siz ro'yxatdan o'tmagansiz!\n\n"
-                "Ro'yxatdan o'tish: /start"
+                "❌ Siz dizimnen ótpegensiz!\n\n"
+                "Dizimnen ótiw: /start"
             )
             if update.message:
                 await update.message.reply_text(text)
@@ -45,25 +45,42 @@ class MainMenuHandler:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
-        # Build menu text
+        # Build clean menu text (NO BOXES - simple and clean)
         menu_text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃       {msg.MENU_TITLE}      ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"👤 {user.get('first_name', 'User')}\n"
-            f"📱 {user.get('phone_number', 'N/A')}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📹 {msg.MENU_CAMERAS_COUNT}: {active_cameras}/{camera_count}\n"
-            f"💾 Status: {msg.STATUS_ACTIVE}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"⬇️ {msg.MENU_SELECT_ACTION}"
+            f"🎯 *{msg.BOT_NAME}*\n"
+            f"_{msg.BOT_DESCRIPTION}_\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"⭐ *{msg.MENU_TITLE}*\n\n"
+            f"👤 {msg.MENU_WELCOME}: *{user.get('first_name', 'User')}*\n"
+            f"📱 Telefon: `{user.get('phone_number', 'N/A')}`\n\n"
+            f"📹 {msg.MENU_CAMERAS_COUNT}: *{active_cameras}/{camera_count}*\n"
+            f"🟢 Status: *{msg.STATUS_ACTIVE}*\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"⬇️ _{msg.MENU_SELECT_ACTION}_"
         )
         
         # Send or edit message
-        if update.message:
-            await update.message.reply_text(menu_text, reply_markup=reply_markup)
-        elif update.callback_query:
-            await update.callback_query.edit_message_text(menu_text, reply_markup=reply_markup)
+        try:
+            if update.message:
+                await update.message.reply_text(
+                    menu_text, 
+                    reply_markup=reply_markup,
+                    parse_mode='Markdown'
+                )
+            elif update.callback_query:
+                await update.callback_query.edit_message_text(
+                    menu_text, 
+                    reply_markup=reply_markup,
+                    parse_mode='Markdown'
+                )
+        except Exception as e:
+            # If Markdown fails, send without formatting
+            logger.warning(f"Markdown parse failed: {e}, sending plain text")
+            plain_text = menu_text.replace('*', '').replace('_', '').replace('`', '')
+            if update.message:
+                await update.message.reply_text(plain_text, reply_markup=reply_markup)
+            elif update.callback_query:
+                await update.callback_query.edit_message_text(plain_text, reply_markup=reply_markup)
     
     @staticmethod
     async def handle_menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):

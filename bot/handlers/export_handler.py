@@ -21,7 +21,7 @@ class ExportHandler:
             "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
             "┃     📥 EXPORT             ┃\n"
             "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "Eksport turini tanlang:\n\n"
+            "Eksport turini tanlan:\n\n"
             "━━━━━━━━━━━━━━━━━━━━━━━━━"
         )
         
@@ -29,7 +29,7 @@ class ExportHandler:
             [InlineKeyboardButton("📹 Video Eksport", callback_data="export_video")],
             [InlineKeyboardButton("📊 Statistika Eksport", callback_data="export_stats")],
             [InlineKeyboardButton("📋 Hodisalar Ro'yxati", callback_data="export_events")],
-            [InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]
+            [InlineKeyboardButton("« Bas Menyu", callback_data="menu_main")]
         ]
         
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))

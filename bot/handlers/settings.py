@@ -23,11 +23,11 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃      {msg.SETTINGS_TITLE}        ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            f"      {msg.SETTINGS_TITLE}        \n"
+            "━━━━━━━━━━━━\n\n"
             f"{msg.SETTINGS_SELECT}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━"
+            "━━━━━━━━━━━━"
         )
         
         keyboard = [
@@ -56,17 +56,17 @@ class SettingsHandler:
         storage_limit = 100
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃      {msg.SETTINGS_PROFILE_TITLE}            ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            f"      {msg.SETTINGS_PROFILE_TITLE}            \n"
+            "━━━━━━━━━━━━\n\n"
             f"👤 {msg.SETTINGS_NAME}: {user.get('first_name', 'User')}\n"
             f"📱 {msg.SETTINGS_PHONE}: {user.get('phone_number', 'N/A')}\n"
             f"📅 {msg.SETTINGS_REGISTERED}: {str(user.get('created_at', ''))[:10]}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "━━━━━━━━━━━━\n\n"
             f"📹 {msg.SETTINGS_CAMERAS}: {len(cameras)}/10\n"
             f"💾 {msg.SETTINGS_STORAGE}: {storage_used:.1f} GB / {storage_limit} GB\n"
             f"📊 {msg.SETTINGS_PLAN}: Free\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━"
+            "━━━━━━━━━━━━"
         )
         
         keyboard = [
@@ -84,11 +84,11 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   ✏️ ATINDI OZGERTIRIW    ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "Jana atinizdi jazin:\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "━━━━━━━━━━━━\n"
+            "   ✏️ ATTI ÓZGERTIW         \n"
+            "━━━━━━━━━━━━\n\n"
+            "Jan̄a atınızdı jazın̄:\n\n"
+            "━━━━━━━━━━━━\n"
             "❌ Biykarlaw: /cancel"
         )
         
@@ -102,18 +102,18 @@ class SettingsHandler:
         user_id = update.effective_user.id
         
         if len(new_name) < 2:
-            await update.message.reply_text("❌ At juda qisqa!")
+            await update.message.reply_text("❌ At qısqa!")
             return EDIT_NAME
         
         # Update in database
         db.update_user_name(user_id, new_name)
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   ✅ AT OZGERTTILDI       ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"👤 Jana at: {new_name}\n\n"
-            "/menu - Tiykargi menyu"
+            "━━━━━━━━━━━━\n"
+            "   ✅ AT ÓZGERTTILDI       \n"
+            "━━━━━━━━━━━━\n\n"
+            f"👤 Jan̄a at: {new_name}\n\n"
+            "/menu - Bas menyu"
         )
         
         await update.message.reply_text(text)
@@ -126,12 +126,12 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   📱 TELEFON OZGERTIRIW   ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "Jana telefon nomirin jazin:\n"
+            "━━━━━━━━━━━━\n"
+            "   📱 TELEFON ÓZGERTIW    \n"
+            "━━━━━━━━━━━━\n\n"
+            "Jan̄a telefon nomerin̄izdi jazın̄:\n"
             "Format: +998XXXXXXXXX\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "━━━━━━━━━━━━\n"
             "❌ Biykarlaw: /cancel"
         )
         
@@ -145,18 +145,18 @@ class SettingsHandler:
         user_id = update.effective_user.id
         
         if not new_phone.startswith('+998') or len(new_phone) < 12:
-            await update.message.reply_text("❌ Qate format! +998 menen baslanin.")
+            await update.message.reply_text("❌ Qate format! +998 menen baslanın̄.")
             return EDIT_PHONE
         
         # Update in database
         db.update_user_phone(user_id, new_phone)
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   ✅ TELEFON OZGERTTILDI  ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"📱 Jana telefon: {new_phone}\n\n"
-            "/menu - Tiykargi menyu"
+            "━━━━━━━━━━━━\n"
+            "   ✅ TELEFON ÓZGERTTILDI  \n"
+            "━━━━━━━━━━━━\n\n"
+            f"📱 Jan̄a telefon: {new_phone}\n\n"
+            "/menu - Bas menyu"
         )
         
         await update.message.reply_text(text)
@@ -166,7 +166,7 @@ class SettingsHandler:
     async def cancel_edit(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Cancel editing."""
         await update.message.reply_text(
-            "❌ Biykar etildi.\n\n/menu - Tiykargi menyu"
+            "❌ Biykar etildi.\n\n/menu - Bas menyu"
         )
         return ConversationHandler.END
     
@@ -194,18 +194,18 @@ class SettingsHandler:
         weekly_status = "✅" if notif_settings.get('weekly', False) else "❌"
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃   {msg.SETTINGS_NOTIF_TITLE}     ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"━━━━ {msg.SETTINGS_EVENTS} ━━━━\n\n"
+            "━━━━━━━━━━━━\n"
+            f"   {msg.SETTINGS_NOTIF_TITLE}     \n"
+            "━━━━━━━━━━━━\n\n"
+            f"──── {msg.SETTINGS_EVENTS} ────\n\n"
             f"{motion_status} Motion detected\n"
             f"{camera_status} Camera offline\n"
             f"{suspicious_status} Suspicious activity\n"
-            f"{daily_status} Kunlik esabat\n"
-            f"{weekly_status} Haptelik esabat\n\n"
-            f"━━━━ {msg.SETTINGS_TIME} ━━━━\n\n"
+            f"{daily_status} Künlik esabat\n"
+            f"{weekly_status} Háptelik esabat\n\n"
+            f"──── {msg.SETTINGS_TIME} ────\n\n"
             "⏰ 08:00 - 22:00\n\n"
-            "💡 Tupmesin basin ozgertiriw ushin"
+            "💡 Tüymesin basın̄ ózgertiw ushın"
         )
         
         keyboard = [
@@ -217,8 +217,8 @@ class SettingsHandler:
                 InlineKeyboardButton(f"⚠️ Shubha: {'ON' if notif_settings.get('suspicious') else 'OFF'}", callback_data="notif_toggle_suspicious"),
             ],
             [
-                InlineKeyboardButton(f"📅 Kunlik: {'ON' if notif_settings.get('daily') else 'OFF'}", callback_data="notif_toggle_daily"),
-                InlineKeyboardButton(f"📆 Haptelik: {'ON' if notif_settings.get('weekly') else 'OFF'}", callback_data="notif_toggle_weekly")
+                InlineKeyboardButton(f"📅 Künlik: {'ON' if notif_settings.get('daily') else 'OFF'}", callback_data="notif_toggle_daily"),
+                InlineKeyboardButton(f"📆 Háptelik: {'ON' if notif_settings.get('weekly') else 'OFF'}", callback_data="notif_toggle_weekly")
             ],
             [InlineKeyboardButton(msg.BTN_BACK, callback_data="menu_settings")]
         ]
@@ -256,16 +256,16 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃      {msg.SETTINGS_SECURITY_TITLE}        ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "━━━━ STATUS ━━━━\n\n"
+            "━━━━━━━━━━━━\n"
+            f"      {msg.SETTINGS_SECURITY_TITLE}        \n"
+            "━━━━━━━━━━━━\n\n"
+            "──── STATUS ────\n\n"
             f"✅ {msg.SETTINGS_2FA}: {msg.SETTINGS_ENABLED}\n"
             f"✅ {msg.SETTINGS_IP_WHITELIST}: 0 ta\n"
             f"✅ {msg.SETTINGS_ACTIVITY_LOGS}: 30 kun\n\n"
-            f"━━━━ {msg.SETTINGS_ACTIVE_SESSIONS} ━━━━\n\n"
+            f"──── {msg.SETTINGS_ACTIVE_SESSIONS} ────\n\n"
             f"📱 1. {msg.SETTINGS_THIS_DEVICE} - {msg.SETTINGS_NOW}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━"
+            "━━━━━━━━━━━━"
         )
         
         keyboard = [
@@ -284,13 +284,13 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   🔒 PAROL OZGERTIRIW     ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            "   🔒 PAROL ÓZGERTIW       \n"
+            "━━━━━━━━━━━━\n\n"
             "Telegram bot parolsiz isleydi.\n\n"
-            "Siz Telegram 2FA arqali\n"
-            "qawipsizlikti tamlaysiz.\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "Siz Telegram 2FA arqalı\n"
+            "qáwipsizlikti tamlaysız.\n\n"
+            "━━━━━━━━━━━━\n\n"
             "💡 Telegram Sazlawlar → Privacy\n"
             "   → Two-Step Verification"
         )
@@ -308,15 +308,15 @@ class SettingsHandler:
         now = datetime.now()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   📋 AKTIVLIK TARIXI      ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            "   📋 AKTIVLIK TARIXI      \n"
+            "━━━━━━━━━━━━\n\n"
             f"📅 {now.strftime('%Y-%m-%d')}\n\n"
-            "━━━━ SONGI HAREKETLER ━━━━\n\n"
-            f"✅ {now.strftime('%H:%M')} - Bot iske tusirildi\n"
-            f"✅ {now.strftime('%H:%M')} - Menyu ashildi\n"
-            f"✅ {now.strftime('%H:%M')} - Sazlawlar ashildi\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━"
+            "──── SONǴGI HÁREKETLER ────\n\n"
+            f"✅ {now.strftime('%H:%M')} - Bot iske tüsirildi\n"
+            f"✅ {now.strftime('%H:%M')} - Menyu ashıldı\n"
+            f"✅ {now.strftime('%H:%M')} - Sazlawlar ashıldı\n\n"
+            "━━━━━━━━━━━━"
         )
         
         keyboard = [[InlineKeyboardButton(msg.BTN_BACK, callback_data="settings_security")]]
@@ -329,13 +329,13 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   ✅ SESSIYALAR           ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "Telegram bot tek bul qurilmada\n"
+            "━━━━━━━━━━━━\n"
+            "   ✅ SESSIYALAR           \n"
+            "━━━━━━━━━━━━\n\n"
+            "Telegram bot tek bul qurılmada\n"
             "isleydi.\n\n"
             "Basqa sessiyalar joq.\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━"
+            "━━━━━━━━━━━━"
         )
         
         keyboard = [[InlineKeyboardButton(msg.BTN_BACK, callback_data="settings_security")]]
@@ -359,14 +359,14 @@ class SettingsHandler:
         quality = context.user_data.get('archive_quality', 'HD 1080p')
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃      {msg.SETTINGS_ARCHIVE_TITLE}             ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"━━━━ {msg.SETTINGS_STORAGE_SETTINGS} ━━━━\n\n"
+            "━━━━━━━━━━━━\n"
+            f"      {msg.SETTINGS_ARCHIVE_TITLE}             \n"
+            "━━━━━━━━━━━━\n\n"
+            f"──── {msg.SETTINGS_STORAGE_SETTINGS} ────\n\n"
             f"📅 {msg.SETTINGS_RETENTION}: {retention} kun\n"
             f"📺 {msg.SETTINGS_QUALITY}: {quality}\n"
             f"📦 {msg.SETTINGS_FORMAT}: MP4\n\n"
-            f"━━━━ {msg.SETTINGS_STORAGE_STATUS} ━━━━\n\n"
+            f"──── {msg.SETTINGS_STORAGE_STATUS} ────\n\n"
             f"💾 {msg.SETTINGS_TOTAL_STORAGE}: {total_size:.1f} GB\n"
             f"📊 {msg.SETTINGS_FREE_SPACE}: {100 - total_size:.1f} GB\n"
             f"📹 {msg.SETTINGS_CAMERAS}: {len(cameras)} ta"
@@ -390,11 +390,11 @@ class SettingsHandler:
         current = context.user_data.get('archive_retention', 30)
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   📅 SAQLAW MUDDETI       ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"Házirgi: {current} kun\n\n"
-            "Jańa muddetti tanlań:"
+            "━━━━━━━━━━━━\n"
+            "   📅 SAQLAW MÜDDETI       \n"
+            "━━━━━━━━━━━━\n\n"
+            f"Házirgi: {current} kün\n\n"
+            "Jan̄a müddetti tanlan̄:"
         )
         
         keyboard = [
@@ -416,7 +416,7 @@ class SettingsHandler:
     async def set_retention(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Save retention setting."""
         query = update.callback_query
-        await query.answer("✅ Saqlandy!")
+        await query.answer("✅ Saqlandı!")
         
         days = int(query.data.replace('retention_', ''))
         context.user_data['archive_retention'] = days
@@ -432,11 +432,11 @@ class SettingsHandler:
         current = context.user_data.get('archive_quality', 'HD 1080p')
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   📺 SAPA TANLLAW         ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            "   📺 SAPA TANLAW          \n"
+            "━━━━━━━━━━━━\n\n"
             f"Házirgi: {current}\n\n"
-            "Jańa sapani tanlań:"
+            "Jan̄a sapanı tanlan̄:"
         )
         
         keyboard = [
@@ -452,7 +452,7 @@ class SettingsHandler:
     async def set_quality(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Save quality setting."""
         query = update.callback_query
-        await query.answer("✅ Saqlandy!")
+        await query.answer("✅ Saqlandı!")
         
         quality_map = {'1080': 'HD 1080p', '720': 'SD 720p', '480': 'Low 480p'}
         quality_code = query.data.replace('quality_', '')
@@ -467,18 +467,18 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   🗑️ ARXIV TAZALAW        ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "⚠️ Bul hareket eski videolardi\n"
+            "━━━━━━━━━━━━\n"
+            "   🗑️ ARXIV TAZALAW        \n"
+            "━━━━━━━━━━━━\n\n"
+            "⚠️ Bul háreket eski videolardı\n"
             "   óshiredi!\n\n"
-            "Qaysi videolardi óshiresiz?"
+            "Qaysı videolardı óshiresiz?"
         )
         
         keyboard = [
-            [InlineKeyboardButton("🗑️ 30 kunnen eski", callback_data="cleanup_30")],
-            [InlineKeyboardButton("🗑️ 14 kunnen eski", callback_data="cleanup_14")],
-            [InlineKeyboardButton("🗑️ 7 kunnen eski", callback_data="cleanup_7")],
+            [InlineKeyboardButton("🗑️ 30 künnen eski", callback_data="cleanup_30")],
+            [InlineKeyboardButton("🗑️ 14 künnen eski", callback_data="cleanup_14")],
+            [InlineKeyboardButton("🗑️ 7 künnen eski", callback_data="cleanup_7")],
             [InlineKeyboardButton(msg.BTN_BACK, callback_data="settings_archive")]
         ]
         
@@ -488,17 +488,17 @@ class SettingsHandler:
     async def do_cleanup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Execute cleanup."""
         query = update.callback_query
-        await query.answer("✅ Tazalandy!")
+        await query.answer("✅ Tazalandı!")
         
         days = query.data.replace('cleanup_', '')
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   ✅ TAZALANDY            ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"{days} kunnen eski videolar\n"
-            "tazalandy.\n\n"
-            "💾 Bos orin: 85.2 GB"
+            "━━━━━━━━━━━━\n"
+            "   ✅ TAZALANDI            \n"
+            "━━━━━━━━━━━━\n\n"
+            f"{days} künnen eski videolar\n"
+            "tazalandı.\n\n"
+            "💾 Bos orın: 85.2 GB"
         )
         
         keyboard = [[InlineKeyboardButton(msg.BTN_BACK, callback_data="settings_archive")]]
@@ -511,11 +511,11 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃      {msg.SETTINGS_LANGUAGE_TITLE}               ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            f"      {msg.SETTINGS_LANGUAGE_TITLE}               \n"
+            "━━━━━━━━━━━━\n\n"
             "🇺🇿 Qaraqalpaq tili\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "━━━━━━━━━━━━\n\n"
             "✅ Házirgi til: Qaraqalpaqsha"
         )
         
@@ -532,21 +532,21 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃      {msg.SETTINGS_HELP_TITLE}            ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            f"      {msg.SETTINGS_HELP_TITLE}            \n"
+            "━━━━━━━━━━━━\n\n"
             f"🎯 {msg.BOT_NAME}\n"
             f"{msg.BOT_DESCRIPTION}\n\n"
-            f"━━━━ {msg.SETTINGS_COMMANDS} ━━━━\n\n"
+            f"──── {msg.SETTINGS_COMMANDS} ────\n\n"
             "/start - Baslaw\n"
-            "/menu - Tiykargi menyu\n"
+            "/menu - Bas menyu\n"
             "/cancel - Biykarlaw\n\n"
-            f"━━━━ {msg.SETTINGS_CAPABILITIES} ━━━━\n\n"
-            "📹 Kamera basqariwi\n"
-            "👁️ Real-time koriw\n"
+            f"──── {msg.SETTINGS_CAPABILITIES} ────\n\n"
+            "📹 Kamera basqarıwı\n"
+            "👁️ Real-time kóriw\n"
             "🧠 AI izlew\n"
             "📊 Statistika\n\n"
-            f"━━━━ {msg.SETTINGS_CONTACT} ━━━━\n\n"
+            f"──── {msg.SETTINGS_CONTACT} ────\n\n"
             "📧 qalmuratovazamat5@gmail.com\n"
             "📱 +998948010312"
         )
@@ -565,62 +565,62 @@ class SettingsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   📖 TOLIQ QOLLANBA       ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            "   📖 TO'LIQ QO'LLANMA     \n"
+            "━━━━━━━━━━━━\n\n"
             "🎯 CAM MAX PRO - AI Video\n"
-            "   Baqlaw Sistemasi\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "📹 1. KAMERA QOSIW\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "• Tiykargi menyu → Kameralardi\n"
-            "  Basqariw → Jana Kamera\n"
-            "• Kamera atin jazin\n"
-            "• IP adresin jazin (misal: 192.168.1.100)\n"
-            "• Port jazin (adette: 554)\n"
-            "• Login jazin (adette: admin)\n"
-            "• Parol jazin\n"
-            "• Bot kamerani tekseredi\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "👁️ 2. KAMERALARDI KORIW\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "• Tiykargi menyu → Kameralardi\n"
-            "  Koriw\n"
-            "• Real-time - házirgi suwret\n"
+            "   Kuzatuv Tizimi\n\n"
+            "━━━━━━━━━━━━\n\n"
+            "📹 1. KAMERA QO'SHISH\n"
+            "━━━━━━━━━━━━\n"
+            "• Asosiy menyu → Kameralarni\n"
+            "  Boshqarish → Yangi Kamera\n"
+            "• Kamera nomini kiriting\n"
+            "• IP manzilni kiriting (masalan: 192.168.1.100)\n"
+            "• Portni kiriting (odatda: 554)\n"
+            "• Loginni kiriting (odatda: admin)\n"
+            "• Parolni kiriting\n"
+            "• Bot kamerani tekshiradi\n\n"
+            "━━━━━━━━━━━━\n\n"
+            "👁️ 2. KAMERALARNI KO'RISH\n"
+            "━━━━━━━━━━━━\n"
+            "• Asosiy menyu → Kameralarni\n"
+            "  Ko'rish\n"
+            "• Real-time - hozirgi rasm\n"
             "• Arxiv - eski videolar\n"
             "• Sevimlilar - saqlangan\n"
             "  momentlar\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🧠 3. AI IZLEW\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "• Tiykargi menyu → AI Video\n"
-            "  izlew\n"
-            "• Ózińiz soragan náriseni\n"
-            "  jazin\n"
-            "• AI barliq kameralardan\n"
-            "  izleydi\n"
-            "• Misal: \"Qizil sumka qayerde?\"\n"
-            "• Misal: \"Keshe kim kirdi?\"\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "━━━━━━━━━━━━\n\n"
+            "🧠 3. AI QIDIRUV\n"
+            "━━━━━━━━━━━━\n"
+            "• Asosiy menyu → AI Video\n"
+            "  qidiruv\n"
+            "• O'zingiz so'ragan narsani\n"
+            "  yozing\n"
+            "• AI barcha kameralardan\n"
+            "  qidiradi\n"
+            "• Masalan: \"Qizil sumka qayerda?\"\n"
+            "• Masalan: \"Kecha kim kirdi?\"\n\n"
+            "━━━━━━━━━━━━\n\n"
             "📊 4. STATISTIKA\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "• Tiykargi menyu → Statistika\n"
-            "• Kunlik/haptelik esabat\n"
-            "• Kamera analitika\n"
-            "• Esabatti eksport etiw\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "⚙️ 5. SAZLAWLAR\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "• Profil - at, telefon\n"
-            "• Bildirtpeler - on/off\n"
-            "• Qawipsizlik - 2FA\n"
-            "• Arxiv - saqlaw muddeti\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "📞 BAYLANIS\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "━━━━━━━━━━━━\n"
+            "• Asosiy menyu → Statistika\n"
+            "• Kunlik/haftalik hisobot\n"
+            "• Kamera analitikasi\n"
+            "• Hisobotni eksport qilish\n\n"
+            "━━━━━━━━━━━━\n\n"
+            "⚙️ 5. SOZLAMALAR\n"
+            "━━━━━━━━━━━━\n"
+            "• Profil - ism, telefon\n"
+            "• Bildirishnomalar - on/off\n"
+            "• Xavfsizlik - 2FA\n"
+            "• Arxiv - saqlash muddati\n\n"
+            "━━━━━━━━━━━━\n\n"
+            "📞 ALOQA\n"
+            "━━━━━━━━━━━━\n"
             "📧 qalmuratovazamat5@gmail.com\n"
             "📱 +998948010312\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "━━━━━━━━━━━━\n"
             "© 2024 CAM MAX PRO"
         )
         

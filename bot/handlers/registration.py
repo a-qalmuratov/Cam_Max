@@ -1,6 +1,6 @@
 """
 User registration and authentication system with 2FA.
-Professional implementation with premium UI.
+Clean modern UI implementation - Qaraqalpaq tilinde.
 """
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
@@ -36,23 +36,18 @@ class RegistrationHandler:
             return ConversationHandler.END
         
         welcome_text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃                           ┃\n"
-            "┃      🎯 CAM MAX PRO       ┃\n"
-            "┃                           ┃\n"
-            "┃   AI Security Platform    ┃\n"
-            "┃                           ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "👋 Xush kelibsiz!\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🔐 Shaxsiy kabinet yaratish\n\n"
-            "📝 Ism va familiyangizni kiriting:\n\n"
-            "   Misol: Azamat Qalmuratov\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "💎 100% xavfsiz va maxfiy"
+            f"🎯 *CAM MAX PRO*\n"
+            f"_AI Video Baqlıw Sisteması_\n\n"
+            f"━━━━━━━━━━━━\n\n"
+            f"👋 *Xosh kelipsiz!*\n\n"
+            f"🔐 Shaxsiy kabinet jaratıw\n\n"
+            f"📝 Atıńız hám familiyańızdı jazıń:\n"
+            f"_Mısalı: Azamat Qalmuratov_\n\n"
+            f"━━━━━━━━━━━━\n"
+            f"💎 100% qáwipsiz hám jasırın"
         )
         
-        await update.message.reply_text(welcome_text)
+        await update.message.reply_text(welcome_text, parse_mode='Markdown')
         return REGISTRATION_NAME
     
     @staticmethod
@@ -63,18 +58,18 @@ class RegistrationHandler:
         # Validate name - allow Latin, Cyrillic, and spaces
         if len(full_name) < 3:
             await update.message.reply_text(
-                "❌ Ism juda qisqa!\n\n"
-                "Iltimos to'liq ism va familiyangizni kiriting.\n"
-                "Masalan: Azamat Qalmuratov"
+                "❌ At júda qısqa!\n\n"
+                "Iltimas tolıq atıńız hám familiyańízdı jazıń.\n"
+                "Mısalı: Azamat Qalmuratov"
             )
             return REGISTRATION_NAME
         
         # Allow Latin, Cyrillic, apostrophe, and spaces
         if not re.match(r"^[a-zA-Zа-яА-ЯёЁ\s']+$", full_name):
             await update.message.reply_text(
-                "❌ Noto'g'ri format!\n\n"
-                "Faqat harflar ishlatilishi mumkin.\n"
-                "Masalan: Azamat Qalmuratov"
+                "❌ Qate format!\n\n"
+                "Tek hárpler paydalanılıwı múmkin.\n"
+                "Mısalı: Azamat Qalmuratov"
             )
             return REGISTRATION_NAME
         
@@ -82,23 +77,21 @@ class RegistrationHandler:
         context.user_data['full_name'] = full_name
         
         # Request phone number with button
-        keyboard = [[KeyboardButton("📱 Telefon raqamni ulashish", request_contact=True)]]
+        keyboard = [[KeyboardButton("📱 Telefon nomerin ulesiw", request_contact=True)]]
         reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
         
         phone_text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃      ✅ ISM QABUL QILINDI  ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            f"✅ *AT QABIL ETILDI*\n\n"
             f"👤 {full_name}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "📱 Telefon raqamingizni yuboring\n\n"
-            "   Tugmani bosing yoki qo'lda kiriting:\n"
-            "   +998 XX XXX XX XX\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "🔒 Bank darajasida shifrlangan"
+            f"━━━━━━━━━━━━\n\n"
+            f"📱 *Telefon nomeriňizdi jiberin*\n\n"
+            f"Túymeni basıń yamasa qoldan jazıń:\n"
+            f"`+998 XX XXX XX XX`\n\n"
+            f"━━━━━━━━━━━━\n"
+            f"🔒 Bank dárejesinde shifrlengen"
         )
         
-        await update.message.reply_text(phone_text, reply_markup=reply_markup)
+        await update.message.reply_text(phone_text, reply_markup=reply_markup, parse_mode='Markdown')
         return REGISTRATION_PHONE
     
     @staticmethod
@@ -117,10 +110,10 @@ class RegistrationHandler:
         
         if not phone:
             await update.message.reply_text(
-                "❌ Noto'g'ri telefon raqam!\n\n"
+                "❌ Qate telefon nomer!\n\n"
                 "Format: +998 XX XXX XX XX\n"
-                "Masalan: +998901234567\n\n"
-                "Qaytadan kiriting:",
+                "Mısalı: +998901234567\n\n"
+                "Qaytadan jazıń:",
                 reply_markup=ReplyKeyboardRemove()
             )
             return REGISTRATION_PHONE
@@ -140,20 +133,18 @@ class RegistrationHandler:
         
         # Send verification code
         code_text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃      🔐 2FA VERIFICATION   ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"📱 Telefon: {phone}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🔑 TASDIQLASH KODI:\n\n"
-            f"       [ {code} ]\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "⏰ Amal qilish: 5 daqiqa\n"
-            "🔢 Urinishlar: 3 ta\n\n"
-            "💬 Kodni kiriting:"
+            f"🔐 *2FA TASTIYIQLAW*\n\n"
+            f"📱 Telefon: `{phone}`\n\n"
+            f"━━━━━━━━━━━━\n\n"
+            f"🔑 *TASTIYIQLAW KODI:*\n\n"
+            f"       *[ {code} ]*\n\n"
+            f"━━━━━━━━━━━━\n\n"
+            f"⏰ Isleydi: 5 minut\n"
+            f"🔢 Urınıwlar: 3 ta\n\n"
+            f"💬 Kodtı jazıń:"
         )
         
-        await update.message.reply_text(code_text, reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text(code_text, reply_markup=ReplyKeyboardRemove(), parse_mode='Markdown')
         
         logger.info(f"Verification code for {user_id}: {code}")
         return VERIFICATION_CODE
@@ -167,8 +158,8 @@ class RegistrationHandler:
         # Check if code exists
         if user_id not in verification_codes:
             await update.message.reply_text(
-                "❌ Sessiya tugadi!\n\n"
-                "Qaytadan boshlash: /start"
+                "❌ Sessiya tuwdi!\n\n"
+                "Qaytadan baslaw: /start"
             )
             return ConversationHandler.END
         
@@ -178,8 +169,8 @@ class RegistrationHandler:
         if datetime.now() > code_data['expires']:
             del verification_codes[user_id]
             await update.message.reply_text(
-                "❌ Kod muddati tugadi!\n\n"
-                "Qaytadan boshlash: /start"
+                "❌ Kod waqtı ótip ketti!\n\n"
+                "Qaytadan baslaw: /start"
             )
             return ConversationHandler.END
         
@@ -187,8 +178,8 @@ class RegistrationHandler:
         if code_data['attempts'] >= 3:
             del verification_codes[user_id]
             await update.message.reply_text(
-                "❌ Juda ko'p xato urinish!\n\n"
-                "15 daqiqadan so'ng qaytadan urinib ko'ring."
+                "❌ Júda kóp qate urınıw!\n\n"
+                "15 minuttan keyin qaytadan urınıń."
             )
             return ConversationHandler.END
         
@@ -198,9 +189,9 @@ class RegistrationHandler:
             remaining = 3 - code_data['attempts']
             
             await update.message.reply_text(
-                f"❌ Noto'g'ri kod!\n\n"
-                f"Qolgan urinishlar: {remaining}\n\n"
-                f"Qaytadan kiriting:"
+                f"❌ Qate kod!\n\n"
+                f"Qalǵan urınıwlar: {remaining}\n\n"
+                f"Qaytadan jazıń:"
             )
             return VERIFICATION_CODE
         
@@ -235,25 +226,21 @@ class RegistrationHandler:
         
         # Success message
         success_text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃                           ┃\n"
-            "┃    ✨ XUSH KELIBSIZ! ✨   ┃\n"
-            "┃                           ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            f"✨ *XOSH KELIPSIZ!* ✨\n\n"
             f"👤 {full_name}\n"
-            f"📱 {phone}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🎉 Shaxsiy kabinet tayyor!\n\n"
-            "✨ Imkoniyatlar:\n\n"
-            "   📹 Kameralar boshqaruvi\n"
-            "   🎬 Video ko'rish va arxiv\n"
-            "   🧠 AI qidiruv tizimi\n"
-            "   📊 Tahlil va statistika\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🚀 Boshlash: /menu"
+            f"📱 `{phone}`\n\n"
+            f"━━━━━━━━━━━━\n\n"
+            f"🎉 *Shaxsiy kabinet tayar!*\n\n"
+            f"✨ Múmkinshilikler:\n\n"
+            f"• 📹 Kameralar basqarıwı\n"
+            f"• 🎬 Video kóriw hám arxiv\n"
+            f"• 🧠 AI izlew sisteması\n"
+            f"• 📊 Tahlil hám statistika\n\n"
+            f"━━━━━━━━━━━━\n\n"
+            f"🚀 Baslaw: /menu"
         )
         
-        await update.message.reply_text(success_text)
+        await update.message.reply_text(success_text, parse_mode='Markdown')
         
         logger.info(f"User registered: {user_id} ({full_name})")
         
@@ -275,8 +262,8 @@ class RegistrationHandler:
         context.user_data.clear()
         
         await update.message.reply_text(
-            "❌ Ro'yxatdan o'tish bekor qilindi.\n\n"
-            "Qayta boshlash: /start",
+            "❌ Dizimnen ótiw biykar etildi.\n\n"
+            "Qaytadan baslaw: /start",
             reply_markup=ReplyKeyboardRemove()
         )
         return ConversationHandler.END

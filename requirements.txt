@@ -3,22 +3,28 @@ python-telegram-bot==20.7
 python-dotenv==1.0.0
 
 # Universal Camera Integration
-opencv-python==4.8.1.78
+opencv-python-headless==4.8.1.78
 ffmpeg-python==0.2.0
 requests==2.31.0
 urllib3==2.1.0
 
-# AI & Computer Vision (YOLOv8 Lightweight)
-torch>=2.0.0
-torchvision>=0.15.0
-ultralytics==8.1.0  # YOLOv8
-numpy>=1.24.0
-pillow>=10.0.0
+# AI & Computer Vision (YOLOv8 with latest PyTorch for Python 3.14)
+torch>=2.9.0
+torchvision>=0.20.0
+ultralytics>=8.3.0
 
-# Database (SQLite - local)
-# No external dependencies needed, comes with Python
+# Core dependencies - PINNED numpy<2 for compatibility
+numpy>=1.24.0,<2.0.0
+pillow>=10.0.0
 
 # Utilities
 python-dateutil==2.8.2
 pytz==2023.3
 aiohttp==3.9.1
+
+# Deploy health server
+fastapi==0.104.1
+uvicorn==0.24.0
+
+# Hugging Face Spaces requirement
+gradio>=4.0.0

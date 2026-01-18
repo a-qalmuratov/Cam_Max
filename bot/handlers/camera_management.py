@@ -29,7 +29,7 @@ class CameraManagementHandler:
         # Get user and their cameras
         user = db.get_user(user_id)
         if not user:
-            await query.edit_message_text("❌ Foydalanuvchi topilmadi!")
+            await query.edit_message_text("❌ Paydalanıwshı tabılmadı!")
             return
         
         org_id = user.get('organization_id')
@@ -38,22 +38,20 @@ class CameraManagementHandler:
         # Build camera list
         if not cameras:
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃      📹 KAMERALAR         ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-                "📭 Hech qanday kamera yo'q\n\n"
-                "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                "Birinchi kamerangizni qo'shing!"
+                "*📹 KAMERALAR*\n\n"
+                "━━━━━━━━━━━━\n\n"
+                "📭 Hesh qanday kamera joq\n\n"
+                "Birinshi kameranizdi qosin!\n\n"
+                "━━━━━━━━━━━━"
             )
             keyboard = [
-                [InlineKeyboardButton("➕ Yangi Kamera Qo'shish", callback_data="cam_add")],
-                [InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]
+                [InlineKeyboardButton("➕ Jana Kamera Qosiw", callback_data="cam_add")],
+                [InlineKeyboardButton("« Bas Menyu", callback_data="menu_main")]
             ]
         else:
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃      📹 KAMERALAR         ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                "*📹 KAMERALAR*\n\n"
+                "━━━━━━━━━━━━\n\n"
             )
             
             keyboard = []
@@ -78,11 +76,11 @@ class CameraManagementHandler:
                 btn_text = f"{icon} {name}"
                 keyboard.append([InlineKeyboardButton(btn_text, callback_data=f"cam_detail_{cam_id}")])
             
-            text += "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            text += "\n━━━━━━━━━━━━\n"
             text += f"📊 Jami: {len(cameras)} kamera"
             
-            keyboard.append([InlineKeyboardButton("➕ Yangi Kamera", callback_data="cam_add")])
-            keyboard.append([InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")])
+            keyboard.append([InlineKeyboardButton("➕ Jana Kamera", callback_data="cam_add")])
+            keyboard.append([InlineKeyboardButton("« Bas Menyu", callback_data="menu_main")])
         
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text(text, reply_markup=reply_markup)
@@ -99,46 +97,44 @@ class CameraManagementHandler:
         # Get camera info
         camera = db.get_camera(camera_id)
         if not camera:
-            await query.edit_message_text("❌ Kamera topilmadi!")
+            await query.edit_message_text("❌ Kamera tabılmadı!")
             return
         
         # Verify ownership
         user_id = update.effective_user.id
         user = db.get_user(user_id)
         if camera.get('organization_id') != user.get('organization_id'):
-            await query.edit_message_text("❌ Bu kamera sizga tegishli emas!")
+            await query.edit_message_text("❌ Bul kamera sizge tiyisli emes!")
             return
         
         status = camera.get('status', 'inactive')
         status_icon = "🟢" if status == 'active' else "🔴"
-        status_text = "Faol" if status == 'active' else "O'chirilgan"
+        status_text = "Aktiv" if status == 'active' else "O'shirilgen"
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃  📹 {camera['name'][:20]:<20} ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            f"*📹 {camera['name']}*\n\n"
             f"{status_icon} Status: {status_text}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📍 IP: {camera['ip_address']}\n"
-            f"🔌 Port: {camera['port']}\n"
-            f"👤 Login: {camera['username']}\n"
-            f"🔑 Parol: ••••••••\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "⬇️ Amalni tanlang:"
+            "━━━━━━━━━━━━\n\n"
+            f"📍 IP: `{camera['ip_address']}`\n"
+            f"🔌 Port: `{camera['port']}`\n"
+            f"👤 Login: `{camera['username']}`\n"
+            f"🔑 Parol: `••••••••`\n\n"
+            "━━━━━━━━━━━━\n\n"
+            "⬇️ Amaldi tanlan:"
         )
         
         # Build control buttons
         if status == 'active':
-            toggle_btn = InlineKeyboardButton("⏹️ O'chirish", callback_data=f"cam_off_{camera_id}")
+            toggle_btn = InlineKeyboardButton("⏹️ O'shiriw", callback_data=f"cam_off_{camera_id}")
         else:
-            toggle_btn = InlineKeyboardButton("▶️ Yoqish", callback_data=f"cam_on_{camera_id}")
+            toggle_btn = InlineKeyboardButton("▶️ Jagiw", callback_data=f"cam_on_{camera_id}")
         
         keyboard = [
             [toggle_btn],
-            [InlineKeyboardButton("📸 Hozirgi Rasm", callback_data=f"cam_snapshot_{camera_id}")],
+            [InlineKeyboardButton("📸 Házirgi Suwret", callback_data=f"cam_snapshot_{camera_id}")],
             [InlineKeyboardButton("📹 Video Arxiv", callback_data=f"cam_archive_{camera_id}")],
-            [InlineKeyboardButton("⚙️ Sozlamalar", callback_data=f"cam_settings_{camera_id}")],
-            [InlineKeyboardButton("🗑️ O'chirish", callback_data=f"cam_delete_{camera_id}")],
+            [InlineKeyboardButton("⚙️ Sazlawlar", callback_data=f"cam_settings_{camera_id}")],
+            [InlineKeyboardButton("🗑️ O'shiriw", callback_data=f"cam_delete_{camera_id}")],
             [InlineKeyboardButton("« Kameralar", callback_data="menu_cameras")]
         ]
         
@@ -186,13 +182,12 @@ class CameraManagementHandler:
         camera = db.get_camera(camera_id)
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃      ⚠️ O'CHIRISH?        ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "*⚠️ O'CHIRISH?*\n\n"
             f"📹 {camera['name']}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "━━━━━━━━━━━━\n\n"
             "⚠️ Barcha arxivlar ham o'chiriladi!\n\n"
-            "Bu amalni qaytarib bo'lmaydi."
+            "Bu amalni qaytarib bo'lmaydi.\n\n"
+            "━━━━━━━━━━━━"
         )
         
         keyboard = [
@@ -237,14 +232,13 @@ class CameraManagementHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   ➕ YANGI KAMERA [1/5]   ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "*➕ YANGI KAMERA [1/5]*\n\n"
+            "━━━━━━━━━━━━\n\n"
             "📝 Kamera nomini kiriting:\n\n"
-            "   Misol: Asosiy zal\n"
-            "   Misol: Kassa\n"
-            "   Misol: Kirish\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "_Misol:_ `Asosiy zal`\n"
+            "_Misol:_ `Kassa`\n"
+            "_Misol:_ `Kirish`\n\n"
+            "━━━━━━━━━━━━\n"
             "❌ Bekor qilish: /cancel"
         )
         
@@ -263,15 +257,13 @@ class CameraManagementHandler:
         context.user_data['cam_name'] = name
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   📍 IP MANZIL [2/5]      ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"✅ Nom: {name}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "*📍 IP MANZIL [2/5]*\n\n"
+            f"✅ Nom: `{name}`\n\n"
+            "━━━━━━━━━━━━\n\n"
             "📍 IP manzilni kiriting:\n\n"
-            "   Misol: 192.168.1.100\n"
-            "   Misol: 10.0.0.50\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "_Misol:_ `192.168.1.100`\n"
+            "_Misol:_ `10.0.0.50`\n\n"
+            "━━━━━━━━━━━━\n"
             "❌ Bekor qilish: /cancel"
         )
         
@@ -295,16 +287,14 @@ class CameraManagementHandler:
         context.user_data['cam_ip'] = ip
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   🔌 PORT [3/5]           ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"✅ Nom: {context.user_data['cam_name']}\n"
-            f"✅ IP: {ip}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "*🔌 PORT [3/5]*\n\n"
+            f"✅ Nom: `{context.user_data['cam_name']}`\n"
+            f"✅ IP: `{ip}`\n\n"
+            "━━━━━━━━━━━━\n\n"
             "🔌 RTSP portni kiriting:\n\n"
-            "   Standart: 554\n"
-            "   Boshqa: 8554, 5554\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "_Standart:_ `554`\n"
+            "_Boshqa:_ `8554`, `5554`\n\n"
+            "━━━━━━━━━━━━\n"
             "💡 Enter bosing = 554"
         )
         
@@ -331,16 +321,14 @@ class CameraManagementHandler:
         context.user_data['cam_port'] = port
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   👤 LOGIN [4/5]          ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"✅ Nom: {context.user_data['cam_name']}\n"
-            f"✅ IP: {context.user_data['cam_ip']}\n"
-            f"✅ Port: {port}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "*👤 LOGIN [4/5]*\n\n"
+            f"✅ Nom: `{context.user_data['cam_name']}`\n"
+            f"✅ IP: `{context.user_data['cam_ip']}`\n"
+            f"✅ Port: `{port}`\n\n"
+            "━━━━━━━━━━━━\n\n"
             "👤 Foydalanuvchi nomini kiriting:\n\n"
-            "   Standart: admin\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "_Standart:_ `admin`\n\n"
+            "━━━━━━━━━━━━\n"
             "💡 Enter bosing = admin"
         )
         
@@ -354,16 +342,14 @@ class CameraManagementHandler:
         context.user_data['cam_username'] = username
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   🔑 PAROL [5/5]          ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"✅ Nom: {context.user_data['cam_name']}\n"
-            f"✅ IP: {context.user_data['cam_ip']}\n"
-            f"✅ Port: {context.user_data['cam_port']}\n"
-            f"✅ Login: {username}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "*🔑 PAROL [5/5]*\n\n"
+            f"✅ Nom: `{context.user_data['cam_name']}`\n"
+            f"✅ IP: `{context.user_data['cam_ip']}`\n"
+            f"✅ Port: `{context.user_data['cam_port']}`\n"
+            f"✅ Login: `{username}`\n\n"
+            "━━━━━━━━━━━━\n\n"
             "🔑 Parolni kiriting:\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "━━━━━━━━━━━━\n"
             "🔒 Parol xavfsiz saqlanadi"
         )
         
@@ -388,12 +374,12 @@ class CameraManagementHandler:
         
         # Show testing message
         testing_msg = await update.message.reply_text(
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃   🔄 TEKSHIRILMOQDA...    ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"📹 {cam_data['cam_name']}\n"
-            f"📍 {cam_data['cam_ip']}:{cam_data['cam_port']}\n\n"
-            "⏳ Kameraga ulanish tekshirilmoqda..."
+            "*🔄 TEKSHIRILMOQDA...*\n\n"
+            f"📹 `{cam_data['cam_name']}`\n"
+            f"📍 `{cam_data['cam_ip']}:{cam_data['cam_port']}`\n\n"
+            "━━━━━━━━━━━━\n\n"
+            "⏳ Kameraga ulanish tekshirilmoqda...",
+            parse_mode='Markdown'
         )
         
         # Test camera connection before saving
@@ -416,18 +402,16 @@ class CameraManagementHandler:
         if not connection_success:
             # Connection failed - ask user what to do
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃   ⚠️ ULANISH XATOSI       ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-                f"📹 {cam_data['cam_name']}\n"
-                f"📍 {cam_data['cam_ip']}:{cam_data['cam_port']}\n\n"
-                "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "*⚠️ ULANISH XATOSI*\n\n"
+                f"📹 `{cam_data['cam_name']}`\n"
+                f"📍 `{cam_data['cam_ip']}:{cam_data['cam_port']}`\n\n"
+                "━━━━━━━━━━━━\n\n"
                 f"{connection_msg}\n\n"
-                "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                "Nima qilmoqchisiz?\n"
-                "• /retry - Qayta urinish\n"
-                "• /save - Baribir saqlash\n"
-                "• /cancel - Bekor qilish"
+                "━━━━━━━━━━━━\n\n"
+                "Nima qilmoqchisiz?\n\n"
+                "• `/retry` - Qayta urinish\n"
+                "• `/save` - Baribir saqlash\n"
+                "• `/cancel` - Bekor qilish"
             )
             
             context.user_data['cam_password'] = password
@@ -457,15 +441,12 @@ class CameraManagementHandler:
                 context.user_data.pop(key, None)
             
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃  ✅ KAMERA MUVAFFAQIYATLI ┃\n"
-                "┃     QO'SHILDI!            ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-                f"📹 {cam_data['cam_name']}\n"
-                f"📍 {cam_data['cam_ip']}:{cam_data['cam_port']}\n\n"
-                "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "*✅ KAMERA MUVAFFAQIYATLI QO'SHILDI!*\n\n"
+                f"📹 `{cam_data['cam_name']}`\n"
+                f"📍 `{cam_data['cam_ip']}:{cam_data['cam_port']}`\n\n"
+                "━━━━━━━━━━━━\n\n"
                 f"{connection_msg}\n\n"
-                "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "━━━━━━━━━━━━\n\n"
                 "🟢 Kamera ONLINE va tayyor!"
             )
             
@@ -486,6 +467,46 @@ class CameraManagementHandler:
             await testing_msg.edit_text(f"❌ Xatolik: {str(e)}")
         
         return ConversationHandler.END
+    
+    @staticmethod
+    async def open_camera_archive(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Open camera archive - redirect to archive time selection."""
+        query = update.callback_query
+        await query.answer("📹 Arxivga o'tilmoqda...")
+        
+        camera_id = int(query.data.split("_")[-1])
+        context.user_data["archive_camera_id"] = camera_id
+        
+        # Redirect to video archive time selection
+        from bot.handlers.video_view import VideoViewHandler
+        await VideoViewHandler.show_archive_time_selection(update, context)
+    
+    @staticmethod
+    async def open_camera_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Open camera settings (placeholder for now)."""
+        query = update.callback_query
+        await query.answer("⚙️ Sazlawlar hali qo'shilmagan", show_alert=True)
+        
+        camera_id = int(query.data.split("_")[-1])
+        
+        # For now, show a placeholder message
+        text = (
+            "*⚙️ KAMERA SAZLAWLARI*\n\n"
+            f"📹 Kamera `#{camera_id}`\n\n"
+            "━━━━━━━━━━━━\n\n"
+            "⚠️ Bu funktsiya hali ishlab shiqilmoqda.\n\n"
+            "Keyingi versiyada:\n"
+            "• Kamera edit\n"
+            "• Parametrlarni o'zgertirish\n"
+            "• Advanced settings"
+        )
+        
+        keyboard = [[InlineKeyboardButton("« Orqaga", callback_data=f"cam_view_{camera_id}")]]
+        
+        try:
+            await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+        except:
+            pass
     
     @staticmethod
     async def cancel_wizard(update: Update, context: ContextTypes.DEFAULT_TYPE):

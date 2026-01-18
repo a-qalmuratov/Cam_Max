@@ -22,9 +22,9 @@ class QuickActionsHandler:
         cameras = db.get_cameras_by_organization(user.get('organization_id')) or []
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃     ⚡ TEZKOR HARAKATLAR   ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            "     ⚡ TEZKOR HARAKATLAR   \n"
+            "━━━━━━━━━━━━\n\n"
         )
         
         keyboard = []
@@ -41,7 +41,7 @@ class QuickActionsHandler:
                     )
                 ])
         
-        text += "\n━━━━ TEZKOR VAQT ━━━━\n\n"
+        text += "\n──── TEZKOR VAQT ────\n\n"
         
         # Quick time buttons
         keyboard.append([
@@ -53,7 +53,7 @@ class QuickActionsHandler:
             InlineKeyboardButton("📆 Kecha", callback_data="archive_yesterday")
         ])
         
-        text += "\n━━━━ TEZKOR AI ━━━━\n\n"
+        text += "\n──── TEZKOR AI ────\n\n"
         
         # Quick AI searches
         keyboard.append([
@@ -61,7 +61,7 @@ class QuickActionsHandler:
             InlineKeyboardButton("🧠 \"Nima bor?\"", callback_data="quick_ai_nima")
         ])
         
-        keyboard.append([InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")])
+        keyboard.append([InlineKeyboardButton("« Bas Menyu", callback_data="menu_main")])
         
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
     
@@ -78,11 +78,11 @@ class QuickActionsHandler:
         
         # Create a fake message with the query
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃    🧠 TEZKOR QIDIRUV      ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            "    🧠 TEZKOR QIDIRUV      \n"
+            "━━━━━━━━━━━━\n\n"
             "🔍 So'rov: \"Bugun kim kirdi?\"\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "━━━━━━━━━━━━\n\n"
             "💬 AI qidiruv menyusiga o'ting va\n"
             "   so'rovingizni to'liq kiriting."
         )
@@ -101,11 +101,11 @@ class QuickActionsHandler:
         await query.answer()
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃    🧠 TEZKOR QIDIRUV      ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            "    🧠 TEZKOR QIDIRUV      \n"
+            "━━━━━━━━━━━━\n\n"
             "🔍 So'rov: \"Hozir kameralarda nima bor?\"\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "━━━━━━━━━━━━\n\n"
             "💬 AI qidiruv menyusiga o'ting va\n"
             "   so'rovingizni to'liq kiriting."
         )

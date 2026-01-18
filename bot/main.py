@@ -1,12 +1,13 @@
 """Main Telegram bot application - Premium Version with AI."""
 import asyncio
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
     CommandHandler,
     MessageHandler,
     CallbackQueryHandler,
     ConversationHandler,
+    ContextTypes,
     filters
 )
 from utils.config import BOT_TOKEN
@@ -28,7 +29,7 @@ from bot.handlers.camera_management import (
     CAM_USERNAME,
     CAM_PASSWORD
 )
-from bot.handlers.video_view import VideoViewHandler
+from bot.handlers.video_view import VideoViewHandler, TIME_RANGE_INPUT
 from bot.handlers.ai_search import (
     AISearchHandler,
     AI_QUERY_INPUT,
@@ -39,6 +40,7 @@ from bot.handlers.settings import SettingsHandler, EDIT_NAME, EDIT_PHONE
 from bot.handlers.quick_actions import QuickActionsHandler
 from bot.handlers.export_handler import ExportHandler
 from bot.handlers.voice_handler import VoiceHandler
+from bot.handlers.analytics import AnalyticsHandler
 
 # Import utilities
 from camera.stream_manager import stream_manager
@@ -47,6 +49,11 @@ from camera.stream_manager import stream_manager
 def main():
     """Start the bot."""
     logger.info("🚀 Starting Cam_Max Bot (Premium AI Version)...")
+    
+    # Check BOT_TOKEN before starting
+    if not BOT_TOKEN:
+        logger.error("❌ BOT_TOKEN not found! Create .env file from .env.example")
+        raise ValueError("BOT_TOKEN is required to start the bot")
     
     # Create application
     application = Application.builder().token(BOT_TOKEN).build()
@@ -106,6 +113,17 @@ def main():
     # =====================================================
     # AI SEARCH CONVERSATION HANDLER
     # =====================================================
+    
+    # Global cancel handler for conversations
+    async def cancel_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Cancel any conversation and return to main menu."""
+        user_id = update.effective_user.id
+        context.user_data.clear()
+        await update.message.reply_text(
+            "❌ Biykarlandy.\n\n/menu - Bas menyu"
+        )
+        return ConversationHandler.END
+    
     ai_search_conv = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(AISearchHandler.show_search_menu, pattern='^menu_ai$')
@@ -119,9 +137,32 @@ def main():
             ]
         },
         fallbacks=[
-            CommandHandler('cancel', AISearchHandler.cancel_search)
+            CommandHandler('cancel', cancel_conversation),
+            CommandHandler('start', cancel_conversation),
+            CommandHandler('menu', cancel_conversation)
         ],
-        per_message=False
+        per_message=False,
+        conversation_timeout=300  # 5 minutes timeout
+    )
+    
+    # =====================================================
+    # ARCHIVE CUSTOM TIME CONVERSATION HANDLER
+    # =====================================================
+    archive_custom_conv = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(VideoViewHandler.show_custom_time_input, pattern='^archive_custom$')
+        ],
+        states={
+            TIME_RANGE_INPUT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, VideoViewHandler.handle_custom_time_input)
+            ]
+        },
+        fallbacks=[
+            CommandHandler('cancel', cancel_conversation),
+            CallbackQueryHandler(lambda u, c: ConversationHandler.END, pattern='^view_archive$')
+        ],
+        per_message=False,
+        conversation_timeout=300
     )
     
     # =====================================================
@@ -163,6 +204,7 @@ def main():
     application.add_handler(registration_conv)
     application.add_handler(camera_wizard_conv)
     application.add_handler(ai_search_conv)
+    application.add_handler(archive_custom_conv)
     application.add_handler(profile_name_conv)
     application.add_handler(profile_phone_conv)
     
@@ -192,12 +234,28 @@ def main():
         pattern='^archive_(10min|1hour|today|yesterday)$'
     ))
     application.add_handler(CallbackQueryHandler(
+        VideoViewHandler.show_custom_time_input,
+        pattern='^archive_custom$'
+    ))
+    application.add_handler(CallbackQueryHandler(
         VideoViewHandler.extract_archive_video,
         pattern='^archive_cam_\\d+$'
     ))
     application.add_handler(CallbackQueryHandler(
         VideoViewHandler.show_bookmarks,
         pattern='^view_bookmarks$'
+    ))
+    application.add_handler(CallbackQueryHandler(
+        VideoViewHandler.save_bookmark,
+        pattern='^bookmark_save_\\d+$'
+    ))
+    application.add_handler(CallbackQueryHandler(
+        VideoViewHandler.view_bookmark,
+        pattern='^bookmark_view_\\d+$'
+    ))
+    application.add_handler(CallbackQueryHandler(
+        VideoViewHandler.delete_bookmark,
+        pattern='^bookmark_delete_\\d+$'
     ))
     application.add_handler(CallbackQueryHandler(
         VideoViewHandler.show_download_menu,
@@ -209,7 +267,7 @@ def main():
     # =====================================================
     application.add_handler(CallbackQueryHandler(
         AISearchHandler.view_video,
-        pattern='^ai_view_video$'
+        pattern='^ai_view_video(_\\d+)?$'
     ))
     
     # =====================================================
@@ -278,6 +336,26 @@ def main():
     application.add_handler(CallbackQueryHandler(
         StatisticsHandler.show_graph,
         pattern='^stats_graph$'
+    ))
+    
+    # =====================================================
+    # ANALYTICS CALLBACKS (from analytics.py)
+    # =====================================================
+    application.add_handler(CallbackQueryHandler(
+        AnalyticsHandler.show_detection_stats,
+        pattern='^stats_detections$'
+    ))
+    application.add_handler(CallbackQueryHandler(
+        AnalyticsHandler.show_storage_stats,
+        pattern='^stats_storage$'
+    ))
+    application.add_handler(CallbackQueryHandler(
+        AnalyticsHandler.show_activity_graph,
+        pattern='^stats_activity$'
+    ))
+    application.add_handler(CallbackQueryHandler(
+        AnalyticsHandler.show_dashboard,
+        pattern='^menu_analytics$'
     ))
     
     # =====================================================
@@ -387,6 +465,14 @@ def main():
         CameraManagementHandler.capture_realtime,
         pattern='^cam_snapshot_\\d+$'
     ))
+    application.add_handler(CallbackQueryHandler(
+        CameraManagementHandler.open_camera_archive,
+        pattern='^cam_archive_\\d+$'
+    ))
+    application.add_handler(CallbackQueryHandler(
+        CameraManagementHandler.open_camera_settings,
+        pattern='^cam_settings_\\d+$'
+    ))
     
     # =====================================================
     # MAIN MENU NAVIGATION (must be last - catches all menu_ patterns)
@@ -395,6 +481,52 @@ def main():
         MainMenuHandler.handle_menu_callback,
         pattern='^menu_'
     ))
+    
+    # =====================================================
+    # UNKNOWN CALLBACK FALLBACK (must be last!)
+    # =====================================================
+    async def handle_unknown_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle any unmatched callback queries with detailed logging."""
+        query = update.callback_query
+        await query.answer("⚠️ Noma'lum tugma")
+        
+        # DETAILED LOGGING for debugging
+        user_id = update.effective_user.id
+        callback_data = query.data
+        
+        # Get user org for logging
+        try:
+            from database.models import db
+            user = db.get_user(user_id)
+            org_id = user.get('organization_id') if user else 'N/A'
+        except:
+            org_id = 'ERROR'
+        
+        # Get current state info
+        current_state = context.user_data.get('state', 'UNKNOWN')
+        
+        logger.warning(
+            f"UNKNOWN CALLBACK | "
+            f"user_id={user_id} | "
+            f"org_id={org_id} | "
+            f"callback='{callback_data}' | "
+            f"state={current_state}"
+        )
+        
+        # Try to show main menu with helpful message
+        text = (
+            "⚠️ Bu tugma hozirda ishlamaydi.\n\n"
+            f"Callback: {callback_data[:30]}...\n\n"
+            "Bas menyuga qaytin."
+        )
+        keyboard = [[InlineKeyboardButton("🏠 Bas Menyu", callback_data="menu_main")]]
+        
+        try:
+            await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+        except:
+            pass
+    
+    application.add_handler(CallbackQueryHandler(handle_unknown_callback))
     
     # =====================================================
     # STARTUP

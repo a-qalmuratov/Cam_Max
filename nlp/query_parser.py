@@ -104,7 +104,15 @@ class UzbekQueryParser:
         return result
     
     def _parse_time(self, query: str) -> Tuple[datetime, datetime]:
-        """Parse time references."""
+        """Parse time references with proper timezone handling (Asia/Tashkent -> UTC)."""
+        try:
+            from utils.access_control import time_helper
+            return time_helper.parse_uzbek_time_phrase(query)
+        except ImportError:
+            # Fallback if access_control not available
+            pass
+        
+        # Fallback to local time (not timezone-aware)
         now = datetime.now()
         
         if 'bugun' in query:
@@ -155,6 +163,14 @@ class VideoSearchEngine:
         # Search database
         results = self._search_events(params)
         
+        # SECURITY: Filter results by user's organization
+        try:
+            from utils.access_control import access_control
+            results = access_control.filter_results_by_org(user_id, results, 'camera_id')
+            logger.info(f"Filtered to {len(results)} results for user {user_id}")
+        except Exception as e:
+            logger.warning(f"Could not filter by org: {e}")
+        
         # Build evidence
         evidence = self._build_evidence(results, params)
         
@@ -177,15 +193,83 @@ class VideoSearchEngine:
         }
     
     def _search_events(self, params: Dict) -> List[Dict]:
-        """Search detection events matching parameters."""
-        # This is simplified - in production, use proper SQL queries
-        from database.v2_models import v2db
+        """Search detection events matching parameters - REAL DB SEARCH."""
+        from database.models import db
         
         results = []
-        
-        # For now, return placeholder
-        # TODO: Implement actual database search
         logger.info(f"Searching events with params: {params}")
+        
+        try:
+            # Get time range
+            time_range = params.get('time_range')
+            if time_range:
+                start_time, end_time = time_range
+            else:
+                # Default last 24 hours
+                end_time = datetime.now()
+                start_time = end_time - timedelta(hours=24)
+            
+            # Get camera filter
+            camera_id = params.get('camera')
+            
+            # Get object type filter
+            object_type = params.get('object_en')  # English version for DB
+            
+            # Get all recent detections
+            if camera_id:
+                detections = db.get_recent_detections(camera_id=camera_id, limit=100)
+            else:
+                detections = db.get_recent_detections(limit=100)
+            
+            # Make sure start/end times are naive for comparison with naive DB times
+            # OR make DB times aware. We'll strip timezone for comparison.
+            start_naive = start_time.replace(tzinfo=None) if start_time.tzinfo else start_time
+            end_naive = end_time.replace(tzinfo=None) if end_time.tzinfo else end_time
+            
+            # Filter by time and object type
+            for det in detections:
+                det_time_str = det.get('detected_at')
+                if det_time_str:
+                    try:
+                        # Parse DB datetime (may be naive or have timezone)
+                        det_time_str_clean = det_time_str.replace('Z', '+00:00')
+                        if '+' in det_time_str_clean or '-' in det_time_str_clean[10:]:
+                            # Has timezone info
+                            det_time = datetime.fromisoformat(det_time_str_clean)
+                            det_time = det_time.replace(tzinfo=None)  # Strip for comparison
+                        else:
+                            # Naive datetime from DB (assume UTC)
+                            det_time = datetime.fromisoformat(det_time_str_clean)
+                        
+                        if start_naive <= det_time <= end_naive:
+                            # Filter by object type if specified
+                            if object_type:
+                                if det.get('object_type', '').lower() == object_type.lower():
+                                    results.append({
+                                        'camera_id': det.get('camera_id'),
+                                        'timestamp': det_time_str,
+                                        'object_type': det.get('object_type'),
+                                        'confidence': det.get('confidence'),
+                                        'image_path': det.get('image_path'),
+                                        'description_uzbek': f"{det.get('object_type')} aniqlandi"
+                                    })
+                            else:
+                                results.append({
+                                    'camera_id': det.get('camera_id'),
+                                    'timestamp': det_time_str,
+                                    'object_type': det.get('object_type'),
+                                    'confidence': det.get('confidence'),
+                                    'image_path': det.get('image_path'),
+                                    'description_uzbek': f"{det.get('object_type')} aniqlandi"
+                                })
+                    except Exception as e:
+                        logger.warning(f"Time parse error for '{det_time_str}': {e}")
+                        continue
+            
+            logger.info(f"Found {len(results)} matching events")
+            
+        except Exception as e:
+            logger.error(f"Search error: {e}")
         
         return results
     

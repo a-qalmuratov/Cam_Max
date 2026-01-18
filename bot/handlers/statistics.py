@@ -27,15 +27,15 @@ class StatisticsHandler:
         stats = db.get_statistics(org_id)
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃      {msg.STATS_TITLE}        ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            f"      {msg.STATS_TITLE}        \n"
+            "━━━━━━━━━━━━\n\n"
             f"📅 {datetime.now().strftime('%Y-%m-%d')}\n\n"
-            f"━━━━━━ {msg.STATS_TODAY} ━━━━━━\n\n"
+            f"────── {msg.STATS_TODAY} ──────\n\n"
             f"👥 {msg.STATS_PEOPLE}: {stats['people_today']} ta\n"
             f"🚗 {msg.STATS_VEHICLES}: {stats['vehicles_today']} ta\n"
             f"📦 {msg.STATS_OBJECTS}: {stats['detections_today']} ta\n\n"
-            f"━━━━ {msg.STATS_CAMERAS} ━━━━\n\n"
+            f"──── {msg.STATS_CAMERAS} ────\n\n"
             f"📹 {msg.STATS_TOTAL}: {stats['cameras_total']}\n"
             f"🟢 {msg.STATS_ACTIVE}: {stats['cameras_active']}\n"
             f"🔴 {msg.STATS_INACTIVE}: {stats['cameras_inactive']}"
@@ -68,11 +68,11 @@ class StatisticsHandler:
         total_week = sum(d['total'] for d in weekly_data) if weekly_data else 0
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃    {msg.STATS_WEEKLY_TITLE}    ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"📊 Haptelik jami: {total_week} ta\n\n"
-            f"━━━━ {msg.STATS_DAILY_BREAKDOWN} ━━━━\n\n"
+            "━━━━━━━━━━━━\n"
+            f"    {msg.STATS_WEEKLY_TITLE}    \n"
+            "━━━━━━━━━━━━\n\n"
+            f"📊 Háptelik jámi: {total_week} ta\n\n"
+            f"──── {msg.STATS_DAILY_BREAKDOWN} ────\n\n"
         )
         
         if weekly_data:
@@ -82,11 +82,11 @@ class StatisticsHandler:
                 vehicles = day_data['vehicles']
                 text += f"📅 {date_str}: 👥{people} 🚗{vehicles}\n"
         else:
-            text += "📭 Ele malumat joq\n"
-            text += "Kamera qosilganda malumat\n"
-            text += "kórine baslaydi.\n"
+            text += "📭 Ele malıwmat joq\n"
+            text += "Kamera qosılıǵanda malıwmat\n"
+            text += "kórine baslaydı.\n"
         
-        text += f"\n━━━━ {msg.STATS_WARNINGS_TITLE} ━━━━\n\n"
+        text += f"\n──── {msg.STATS_WARNINGS_TITLE} ────\n\n"
         text += f"⚠️ 0 {msg.STATS_SUSPICIOUS}\n"
         text += f"❓ 0 {msg.STATS_UNKNOWN}"
         
@@ -108,10 +108,10 @@ class StatisticsHandler:
         cameras = db.get_cameras_by_organization(user.get('organization_id')) or []
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃    {msg.STATS_BTN_CAMERAS}    ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "━━━━ KAMERALAR ━━━━\n\n"
+            "━━━━━━━━━━━━\n"
+            f"    {msg.STATS_BTN_CAMERAS}    \n"
+            "━━━━━━━━━━━━\n\n"
+            "──── KAMERALAR ────\n\n"
         )
         
         if cameras:
@@ -123,7 +123,7 @@ class StatisticsHandler:
                 text += f"{status_icon} {cam['name']} → {count} hodisa\n"
         else:
             text += "📭 Kameralar joq\n\n"
-            text += "Avval kamera qosin!"
+            text += "Aldın kamera qosıń!"
         
         keyboard = [
             [InlineKeyboardButton(msg.BTN_BACK, callback_data="menu_stats")]
@@ -147,12 +147,12 @@ class StatisticsHandler:
         })
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃    {msg.STATS_BTN_ALERTS}    ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "━━━━ BUGUNGI ALERTLAR ━━━━\n\n"
+            "━━━━━━━━━━━━\n"
+            f"    {msg.STATS_BTN_ALERTS}    \n"
+            "━━━━━━━━━━━━\n\n"
+            "──── BUGUNGI ALERTLAR ────\n\n"
             "⚪ Barliq sistemalar normal\n\n"
-            "━━━━ SAZLAWLAR ━━━━\n\n"
+            "──── SAZLAWLAR ────\n\n"
             f"{'✅' if notif.get('motion') else '❌'} Motion detection\n"
             f"{'✅' if notif.get('camera') else '❌'} Camera offline\n"
             f"{'✅' if notif.get('suspicious') else '❌'} Suspicious activity\n"
@@ -226,9 +226,9 @@ qalmuratovazamat5@gmail.com
         )
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃    {msg.EXPORT_SENT}            ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            f"    {msg.EXPORT_SENT}            \n"
+            "━━━━━━━━━━━━\n\n"
             f"{msg.EXPORT_FILE_SENT}"
         )
         
@@ -253,9 +253,9 @@ qalmuratovazamat5@gmail.com
         total = sum(d['total'] for d in weekly_data) if weekly_data else 0
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            f"┃    {msg.STATS_BTN_GRAPH}     ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "━━━━━━━━━━━━\n"
+            f"    {msg.STATS_BTN_GRAPH}     \n"
+            "━━━━━━━━━━━━\n\n"
         )
         
         if weekly_data and total > 0:
@@ -269,7 +269,7 @@ qalmuratovazamat5@gmail.com
             
             text += f"\n📊 Jami: {total} ta"
         else:
-            text += "📭 Ele grafik ushin malumat joq\n\n"
+            text += "📭 Ele grafik ushın malıwmat joq\n\n"
             text += "Kameralar islegende\n"
             text += "grafik kórinedi."
         

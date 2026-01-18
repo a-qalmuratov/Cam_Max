@@ -1,15 +1,17 @@
 """
 Real AI Search handler with Gemini integration.
-Premium conversational AI that understands any question.
+Premium conversational AI - Qaraqalpaq tilinde.
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
 from database.models import db
 from camera.stream_manager import stream_manager
 from utils.logger import logger
+from utils.messages import msg
 from ai.gemini_ai import gemini_ai
 import cv2
 import io
+import os
 
 # Conversation states
 AI_CONVERSATION = 1
@@ -30,23 +32,20 @@ class AISearchHandler:
         gemini_ai.clear_history(user_id)
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃    🧠 AI YORDAMCHI        ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "🤖 Salom! Men sizning AI yordamchingizman.\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "💬 Menga istalgan savolingizni bering:\n\n"
-            "📝 Misollar:\n"
-            "• \"Stol ustidagi qizil sumka qayerda?\"\n"
-            "• \"Kecha kim kirdi?\"\n"
-            "• \"1-kamerada hozir nima bor?\"\n"
-            "• \"Oq ko'ylakli odam qayerga ketdi?\"\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "💡 Agar ma'lumot yetarli bo'lmasa,\n"
-            "   men sizdan so'rab olaman!"
+            "━━━━━━━━━━━━\n"
+            f"    {msg.AI_TITLE}        \n"
+            "━━━━━━━━━━━━\n\n"
+            f"{msg.AI_GREETING}\n\n"
+            "━━━━━━━━━━━━\n\n"
+            f"{msg.AI_ASK_ANYTHING}\n\n"
+            f"{msg.AI_EXAMPLES}\n"
+            f"• {msg.AI_EXAMPLE1}\n"
+            f"• {msg.AI_EXAMPLE2}\n\n"
+            "━━━━━━━━━━━━\n\n"
+            f"{msg.AI_HINT}"
         )
         
-        keyboard = [[InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]]
+        keyboard = [[InlineKeyboardButton(msg.BTN_MAIN_MENU, callback_data="menu_main")]]
         
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
         
@@ -59,16 +58,22 @@ class AISearchHandler:
         user_id = update.effective_user.id
         
         # Show thinking message
-        thinking_msg = await update.message.reply_text(
-            "🤔 O'ylayapman..."
-        )
+        thinking_msg = await update.message.reply_text(msg.AI_THINKING)
         
         try:
             # Get AI response
             ai_response = gemini_ai.chat(user_id, message_text)
             
             if not ai_response['success']:
-                await thinking_msg.edit_text(ai_response['text'])
+                # Check if we need to show main menu button
+                keyboard = []
+                if ai_response.get('show_main_menu', False):
+                    keyboard = [[InlineKeyboardButton(msg.BTN_MAIN_MENU, callback_data="menu_main")]]
+                
+                if keyboard:
+                    await thinking_msg.edit_text(ai_response['text'], reply_markup=InlineKeyboardMarkup(keyboard))
+                else:
+                    await thinking_msg.edit_text(ai_response['text'])
                 return AI_CONVERSATION
             
             # Check action type
@@ -93,12 +98,12 @@ class AISearchHandler:
                 question = ai_response.get('question', ai_response['text'])
                 
                 text = (
-                    "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                    "┃    🤖 AI SAVOLI           ┃\n"
-                    "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                    "━━━━━━━━━━━━\n"
+                    f"    {msg.AI_QUESTION_TITLE}           \n"
+                    "━━━━━━━━━━━━\n\n"
                     f"{ai_response['text']}\n\n"
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    "💬 Javobingizni yozing:"
+                    "━━━━━━━━━━━━\n"
+                    f"{msg.AI_WRITE_ANSWER}"
                 )
                 
                 await thinking_msg.edit_text(text)
@@ -107,17 +112,17 @@ class AISearchHandler:
             else:
                 # Regular AI response
                 text = (
-                    "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                    "┃    🤖 AI JAVOB            ┃\n"
-                    "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                    "━━━━━━━━━━━━\n"
+                    f"    {msg.AI_ANSWER_TITLE}            \n"
+                    "━━━━━━━━━━━━\n\n"
                     f"{ai_response['text']}\n\n"
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-                    "💬 Boshqa savol bering yoki /menu"
+                    "━━━━━━━━━━━━\n"
+                    f"{msg.AI_ASK_MORE}"
                 )
                 
                 keyboard = [
-                    [InlineKeyboardButton("🔄 Yangi Savol", callback_data="menu_ai")],
-                    [InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]
+                    [InlineKeyboardButton(msg.AI_BTN_NEW_QUESTION, callback_data="menu_ai")],
+                    [InlineKeyboardButton(msg.BTN_MAIN_MENU, callback_data="menu_main")]
                 ]
                 
                 await thinking_msg.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -125,7 +130,7 @@ class AISearchHandler:
                 
         except Exception as e:
             logger.error(f"AI handler error: {e}")
-            await thinking_msg.edit_text(f"❌ Xatolik: {str(e)}")
+            await thinking_msg.edit_text(f"{msg.ERROR_GENERAL}: {str(e)}")
             return AI_CONVERSATION
     
     @staticmethod
@@ -133,31 +138,31 @@ class AISearchHandler:
         update: Update, 
         context: ContextTypes.DEFAULT_TYPE, 
         params: dict,
-        msg
+        thinking_msg
     ):
         """Search for object in current camera views."""
         user_id = update.effective_user.id
         user = db.get_user(user_id)
         
         if not user:
-            await msg.edit_text("❌ Foydalanuvchi topilmadi!")
+            await thinking_msg.edit_text(msg.ERROR_USER_NOT_FOUND)
             return
         
         cameras = db.get_cameras_by_organization(user.get('organization_id')) or []
         
         if not cameras:
-            await msg.edit_text("❌ Kameralar yo'q! Avval kamera qo'shing.")
+            await thinking_msg.edit_text(f"{msg.ERROR_CAMERA_NOT_FOUND} Avval kamera qosin.")
             return
         
         # What to search for
-        search_query = params.get('object', '') or params.get('query', 'ob\'ekt')
+        search_query = params.get('object', '') or params.get('query', "ob'ekt")
         if params.get('color'):
             search_query = f"{params['color']} {search_query}"
         
-        await msg.edit_text(
-            f"🔍 Barcha kameralarda qidirilmoqda:\n"
+        await thinking_msg.edit_text(
+            f"{msg.AI_SEARCHING}\n"
             f"🎯 \"{search_query}\"\n\n"
-            f"⏳ Iltimos kuting..."
+            f"{msg.AI_PLEASE_WAIT}"
         )
         
         results = []
@@ -211,11 +216,11 @@ class AISearchHandler:
         # Show results
         if results:
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃    ✅ TOPILDI!            ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                "━━━━━━━━━━━━\n"
+                f"    {msg.AI_FOUND}            \n"
+                "━━━━━━━━━━━━\n\n"
                 f"🎯 \"{search_query}\"\n\n"
-                "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "━━━━━━━━━━━━\n\n"
             )
             
             for r in results:
@@ -233,77 +238,156 @@ class AISearchHandler:
                 )
             
             keyboard = [
-                [InlineKeyboardButton("🔄 Qayta Qidirish", callback_data="menu_ai")],
-                [InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]
+                [InlineKeyboardButton(msg.AI_BTN_SEARCH_AGAIN, callback_data="menu_ai")],
+                [InlineKeyboardButton(msg.BTN_MAIN_MENU, callback_data="menu_main")]
             ]
             
-            await msg.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+            await thinking_msg.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
             
         else:
             text = (
-                "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                "┃    📭 TOPILMADI          ┃\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+                "━━━━━━━━━━━━\n"
+                f"    {msg.AI_NOT_FOUND}          \n"
+                "━━━━━━━━━━━━\n\n"
                 f"🎯 \"{search_query}\"\n\n"
-                "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"❌ {len(cameras)} ta kamerada tekshirildi,\n"
-                "   hech qayerida topilmadi.\n\n"
-                "💡 Boshqa so'rov bilan urinib ko'ring\n"
-                "   yoki video arxivda qidiring."
+                "━━━━━━━━━━━━\n\n"
+                f"❌ {len(cameras)} {msg.AI_CAMERAS_CHECKED},\n"
+                "   hech qayerinde tabilmadi.\n\n"
+                f"{msg.AI_TRY_ANOTHER}"
             )
             
             keyboard = [
-                [InlineKeyboardButton("📅 Arxivda Qidirish", callback_data="view_archive")],
-                [InlineKeyboardButton("🔄 Qayta Qidirish", callback_data="menu_ai")],
-                [InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]
+                [InlineKeyboardButton(msg.AI_BTN_SEARCH_ARCHIVE, callback_data="view_archive")],
+                [InlineKeyboardButton(msg.AI_BTN_SEARCH_AGAIN, callback_data="menu_ai")],
+                [InlineKeyboardButton(msg.BTN_MAIN_MENU, callback_data="menu_main")]
             ]
             
-            await msg.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+            await thinking_msg.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
     
     @staticmethod
     async def _execute_archive_search(
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
         params: dict,
-        msg
+        thinking_msg
     ):
         """Search in video archive."""
         user_id = update.effective_user.id
         user = db.get_user(user_id)
         
         if not user:
-            await msg.edit_text("❌ Foydalanuvchi topilmadi!")
+            await thinking_msg.edit_text(msg.ERROR_USER_NOT_FOUND)
             return
         
         # Build search description
-        search_query = params.get('object', 'ob\'ekt')
+        search_query = params.get('object', "ob'ekt")
         if params.get('color'):
             search_query = f"{params['color']} {search_query}"
         
         time_range = params.get('time', 'bugun')
-        camera = params.get('camera', 'barcha kameralar')
+        camera = params.get('camera', 'barliq kameralar')
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃    🔍 ARXIV QIDIRUVI      ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"🎯 Qidiruv: \"{search_query}\"\n"
-            f"📅 Vaqt: {time_range}\n"
+            "━━━━━━━━━━━━\n"
+            f"    {msg.AI_ARCHIVE_TITLE}      \n"
+            "━━━━━━━━━━━━\n\n"
+            f"🎯 Izlew: \"{search_query}\"\n"
+            f"📅 Waqit: {time_range}\n"
             f"📹 Kamera: {camera}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "⚠️ Video arxiv tizimi hali to'liq ishga\n"
-            "   tushirilmagan. Hozircha real-time\n"
-            "   kameralarda qidirishingiz mumkin.\n\n"
-            "💡 \"Hozir qayerda?\" deb so'rang\n"
-            "   real-time qidirish uchun."
+            "⏳ DB'dan qidirilmoqda...\n"
         )
         
-        keyboard = [
-            [InlineKeyboardButton("🔴 Real-time Qidirish", callback_data="menu_ai")],
-            [InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]
-        ]
+        await thinking_msg.edit_text(text)
         
-        await msg.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+        # REAL DB SEARCH using nlp/query_parser.py
+        try:
+            from nlp.query_parser import search_engine
+            
+            # Build search query string from params
+            query_str = ""
+            if params.get('camera'):
+                query_str += f"{params['camera']}-kamera "
+            if params.get('color'):
+                query_str += f"{params['color']} "
+            if params.get('object'):
+                query_str += f"{params['object']} "
+            if params.get('action'):
+                query_str += f"{params['action']} "
+            if params.get('time'):
+                query_str += params['time']
+            
+            if not query_str.strip():
+                query_str = "bugun"
+            
+            # Execute REAL search
+            search_result = search_engine.search(query_str, user_id)
+            results = search_result.get('results', [])
+            
+            if results:
+                # Show results
+                text = (
+                    "━━━━━━━━━━━━\n"
+                    f"    ✅ NATIJALAR            \n"
+                    "━━━━━━━━━━━━\n\n"
+                    f"🎯 \"{search_query}\" - {len(results)} ta topildi\n\n"
+                )
+                
+                # Show top 5 results
+                for i, result in enumerate(results[:5]):
+                    cam_id = result.get('camera_id', '?')
+                    timestamp = result.get('timestamp', 'N/A')
+                    obj_type = result.get('object_type', 'N/A')
+                    text += f"📍 {i+1}. Kamera {cam_id} - {timestamp}\n"
+                    text += f"   └ {obj_type}\n\n"
+                
+                if len(results) > 5:
+                    text += f"... va yana {len(results) - 5} ta\n\n"
+                
+                text += "━━━━━━━━━━━━"
+                
+                # Save results to context for view_video
+                context.user_data['ai_search_results'] = results
+                
+                keyboard = [
+                    [InlineKeyboardButton("📹 Birinchi natijani ko'rish", callback_data="ai_view_video_0")],
+                    [InlineKeyboardButton(msg.AI_BTN_SEARCH_AGAIN, callback_data="menu_ai")],
+                    [InlineKeyboardButton(msg.BTN_MAIN_MENU, callback_data="menu_main")]
+                ]
+            else:
+                # No results
+                text = (
+                    "━━━━━━━━━━━━\n"
+                    f"    ❌ TOPILMADI           \n"
+                    "━━━━━━━━━━━━\n\n"
+                    f"🎯 \"{search_query}\" - topilmadi\n\n"
+                    "💡 Tavsiyalar:\n"
+                    "• Waqit oralig'ini kengaytin\n"
+                    "• Boshqa kamerani sinab ko'rin\n"
+                    "• Realtime qidiruvni ishlatin\n\n"
+                    "━━━━━━━━━━━━"
+                )
+                
+                keyboard = [
+                    [InlineKeyboardButton(msg.AI_BTN_REALTIME_SEARCH, callback_data="menu_ai")],
+                    [InlineKeyboardButton(msg.BTN_MAIN_MENU, callback_data="menu_main")]
+                ]
+            
+        except Exception as e:
+            logger.error(f"Archive search error: {e}")
+            text = (
+                "━━━━━━━━━━━━\n"
+                f"    ❌ XATOLIK             \n"
+                "━━━━━━━━━━━━\n\n"
+                f"Qidiruv xatosi: {str(e)}\n\n"
+                "Realtime qidiruvni sinab ko'rin."
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton(msg.AI_BTN_REALTIME_SEARCH, callback_data="menu_ai")],
+                [InlineKeyboardButton(msg.BTN_MAIN_MENU, callback_data="menu_main")]
+            ]
+        
+        await thinking_msg.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
     
     @staticmethod
     async def handle_clarification(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -312,20 +396,87 @@ class AISearchHandler:
     
     @staticmethod
     async def view_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """View video evidence."""
+        """View video evidence from search results."""
         query = update.callback_query
-        await query.answer("🔜 Video arxiv tez orada!")
+        await query.answer("📹 Yuklanmoqda...")
+        
+        # Get result index from callback data (e.g., "ai_view_video_0")
+        try:
+            index = int(query.data.split('_')[-1])
+        except:
+            index = 0
+        
+        # Get saved results from context
+        results = context.user_data.get('ai_search_results', [])
+        
+        if not results or index >= len(results):
+            text = (
+                "━━━━━━━━━━━━\n"
+                "    ❌ XATOLIK             \n"
+                "━━━━━━━━━━━━\n\n"
+                "Natijalar topilmadi.\n"
+                "Qayta qidiring."
+            )
+            keyboard = [[InlineKeyboardButton(msg.BTN_BACK, callback_data="menu_ai")]]
+            await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+            return
+        
+        # Get specific result
+        result = results[index]
+        camera_id = result.get('camera_id', '?')
+        timestamp = result.get('timestamp', 'N/A')
+        obj_type = result.get('object_type', 'N/A')
+        confidence = result.get('confidence', 0)
+        image_path = result.get('image_path')
+        
+        # Format timestamp for display
+        try:
+            from utils.access_control import time_helper
+            from datetime import datetime
+            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            display_time = time_helper.format_for_display(dt)
+        except:
+            display_time = timestamp
         
         text = (
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃    📹 VIDEO               ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            "🔜 Video arxiv tizimi tez orada\n"
-            "   to'liq ishga tushiriladi."
+            "━━━━━━━━━━━━\n"
+            "    📹 DETECTION TAFSILATI  \n"
+            "━━━━━━━━━━━━\n\n"
+            f"📍 Kamera: {camera_id}\n"
+            f"⏰ Waqit: {display_time}\n"
+            f"🎯 Ob'ekt: {obj_type}\n"
+            f"📊 Aniqlik: {confidence:.0%}\n\n"
+            "━━━━━━━━━━━━\n\n"
         )
         
-        keyboard = [[InlineKeyboardButton("« Orqaga", callback_data="menu_ai")]]
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+        # Add navigation if multiple results
+        nav_buttons = []
+        if index > 0:
+            nav_buttons.append(InlineKeyboardButton("⬅️ Oldingi", callback_data=f"ai_view_video_{index-1}"))
+        if index < len(results) - 1:
+            nav_buttons.append(InlineKeyboardButton("Keyingi ➡️", callback_data=f"ai_view_video_{index+1}"))
+        
+        keyboard = []
+        if nav_buttons:
+            keyboard.append(nav_buttons)
+        keyboard.append([InlineKeyboardButton("🔍 Natijalar", callback_data="menu_ai")])
+        keyboard.append([InlineKeyboardButton(msg.BTN_MAIN_MENU, callback_data="menu_main")])
+        
+        # Send image if available
+        if image_path and os.path.exists(image_path):
+            try:
+                with open(image_path, 'rb') as photo:
+                    await query.message.reply_photo(
+                        photo=photo,
+                        caption=text
+                    )
+                await query.delete_message()
+            except Exception as e:
+                logger.warning(f"Could not send image: {e}")
+                await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+        else:
+            text += "⚠️ Suwret tabilmadi (arxiv o'chirilgan)\n"
+            await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
     
     @staticmethod
     async def cancel_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -334,8 +485,8 @@ class AISearchHandler:
         gemini_ai.clear_history(user_id)
         
         await update.message.reply_text(
-            "❌ AI suhbat tugatildi.\n\n"
-            "/menu - Asosiy menyu"
+            f"{msg.AI_CANCELLED}\n\n"
+            "/menu - Tiykargi menyu"
         )
         return ConversationHandler.END
 

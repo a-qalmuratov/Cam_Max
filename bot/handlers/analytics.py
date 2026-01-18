@@ -54,7 +54,7 @@ class AnalyticsHandler:
             [InlineKeyboardButton("🤖 AI aniqlashlar", callback_data="stats_detections")],
             [InlineKeyboardButton("💾 Saqlash holati", callback_data="stats_storage")],
             [InlineKeyboardButton("📈 Faollik grafigi", callback_data="stats_activity")],
-            [InlineKeyboardButton("« Asosiy Menyu", callback_data="menu_main")]
+            [InlineKeyboardButton("« Bas Menyu", callback_data="menu_main")]
         ]
         
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -70,7 +70,7 @@ class AnalyticsHandler:
             f"🤖 **AI aniqlashlar:** {detection_count} ta (so'nggi)\n\n"
             f"💾 **Saqlash:** {storage_mb:.1f} MB ishlatilgan\n\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "Batafsil ko'rish uchun tanlang:"
+            "Batafsil ko'rish uchun tanlan:"
         )
         
         if query:
@@ -182,7 +182,7 @@ class AnalyticsHandler:
             f"📂 Video fayllar: {storage_info['video_count']} ta\n"
             f"📦 Hajmi: {storage_info['total_mb']:.1f} MB\n"
             f"📅 Eng eski: {storage_info['oldest'] or 'N/A'}\n"
-            f"📅 Eng yangi: {storage_info['newest'] or 'N/A'}\n\n"
+            f"📅 Eng Jana: {storage_info['newest'] or 'N/A'}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"🗑️ Tozalash: /cleanup_archives\n"
             f"⚙️ Saqlash muddati: 30 kun"

@@ -9,10 +9,15 @@ load_dotenv()
 # Base directory
 BASE_DIR = Path(__file__).parent.parent
 
-# Telegram Bot
+# Telegram Bot - safer loading (don't crash on import)
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN not found in environment variables!")
+    import warnings
+    warnings.warn(
+        "BOT_TOKEN not found in environment variables! "
+        "Bot will not start. Create .env file from .env.example",
+        UserWarning
+    )
 
 # Database
 DATABASE_PATH = os.getenv('DATABASE_PATH', './data/cam_max.db')

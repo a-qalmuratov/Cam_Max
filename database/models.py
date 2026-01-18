@@ -188,6 +188,22 @@ class Database:
             )
         ''')
         
+        # Bookmarks table (for saving favorite moments)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS bookmarks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                camera_id INTEGER NOT NULL,
+                name TEXT,
+                timestamp TIMESTAMP NOT NULL,
+                image_path TEXT,
+                note TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id),
+                FOREIGN KEY (camera_id) REFERENCES cameras (id)
+            )
+        ''')
+        
         conn.commit()
         conn.close()
         logger.info("Database tables created successfully")
@@ -443,7 +459,7 @@ class Database:
     
     # Statistics methods
     def get_statistics(self, organization_id: int = None) -> Dict[str, Any]:
-        """Get real statistics for dashboard."""
+        """Get real statistics for dashboard, filtered by organization."""
         conn = self._get_connection()
         cursor = conn.cursor()
         
@@ -465,25 +481,45 @@ class Database:
         total_cameras = row[0] if row else 0
         active_cameras = row[1] if row and row[1] else 0
         
-        # Get today's detection counts
-        cursor.execute('''
-            SELECT 
-                SUM(CASE WHEN object_type = 'person' THEN 1 ELSE 0 END) as people,
-                SUM(CASE WHEN object_type IN ('car', 'truck', 'bus', 'motorcycle') THEN 1 ELSE 0 END) as vehicles,
-                COUNT(*) as total_detections
-            FROM detections 
-            WHERE DATE(detected_at) = DATE('now')
-        ''')
+        # Get today's detection counts - FILTERED BY ORGANIZATION
+        if organization_id:
+            cursor.execute('''
+                SELECT 
+                    SUM(CASE WHEN d.object_type = 'person' THEN 1 ELSE 0 END) as people,
+                    SUM(CASE WHEN d.object_type IN ('car', 'truck', 'bus', 'motorcycle') THEN 1 ELSE 0 END) as vehicles,
+                    COUNT(*) as total_detections
+                FROM detections d
+                JOIN cameras c ON d.camera_id = c.id
+                WHERE DATE(d.detected_at) = DATE('now')
+                AND c.organization_id = ?
+            ''', (organization_id,))
+        else:
+            cursor.execute('''
+                SELECT 
+                    SUM(CASE WHEN object_type = 'person' THEN 1 ELSE 0 END) as people,
+                    SUM(CASE WHEN object_type IN ('car', 'truck', 'bus', 'motorcycle') THEN 1 ELSE 0 END) as vehicles,
+                    COUNT(*) as total_detections
+                FROM detections 
+                WHERE DATE(detected_at) = DATE('now')
+            ''')
         
         row = cursor.fetchone()
         people_today = row[0] if row and row[0] else 0
         vehicles_today = row[1] if row and row[1] else 0
         total_detections = row[2] if row and row[2] else 0
         
-        # Get events count
-        cursor.execute('''
-            SELECT COUNT(*) FROM events WHERE DATE(created_at) = DATE('now')
-        ''')
+        # Get events count - FILTERED BY ORGANIZATION
+        if organization_id:
+            cursor.execute('''
+                SELECT COUNT(*) FROM events e
+                LEFT JOIN cameras c ON e.camera_id = c.id
+                WHERE DATE(e.created_at) = DATE('now')
+                AND (c.organization_id = ? OR e.camera_id IS NULL)
+            ''', (organization_id,))
+        else:
+            cursor.execute('''
+                SELECT COUNT(*) FROM events WHERE DATE(created_at) = DATE('now')
+            ''')
         row = cursor.fetchone()
         events_today = row[0] if row else 0
         
@@ -500,21 +536,36 @@ class Database:
         }
     
     def get_weekly_statistics(self, organization_id: int = None) -> List[Dict[str, Any]]:
-        """Get weekly statistics breakdown."""
+        """Get weekly statistics breakdown, filtered by organization."""
         conn = self._get_connection()
         cursor = conn.cursor()
         
-        cursor.execute('''
-            SELECT 
-                DATE(detected_at) as date,
-                SUM(CASE WHEN object_type = 'person' THEN 1 ELSE 0 END) as people,
-                SUM(CASE WHEN object_type IN ('car', 'truck', 'bus', 'motorcycle') THEN 1 ELSE 0 END) as vehicles,
-                COUNT(*) as total
-            FROM detections 
-            WHERE detected_at >= DATE('now', '-7 days')
-            GROUP BY DATE(detected_at)
-            ORDER BY date DESC
-        ''')
+        if organization_id:
+            cursor.execute('''
+                SELECT 
+                    DATE(d.detected_at) as date,
+                    SUM(CASE WHEN d.object_type = 'person' THEN 1 ELSE 0 END) as people,
+                    SUM(CASE WHEN d.object_type IN ('car', 'truck', 'bus', 'motorcycle') THEN 1 ELSE 0 END) as vehicles,
+                    COUNT(*) as total
+                FROM detections d
+                JOIN cameras c ON d.camera_id = c.id
+                WHERE d.detected_at >= DATE('now', '-7 days')
+                AND c.organization_id = ?
+                GROUP BY DATE(d.detected_at)
+                ORDER BY date DESC
+            ''', (organization_id,))
+        else:
+            cursor.execute('''
+                SELECT 
+                    DATE(detected_at) as date,
+                    SUM(CASE WHEN object_type = 'person' THEN 1 ELSE 0 END) as people,
+                    SUM(CASE WHEN object_type IN ('car', 'truck', 'bus', 'motorcycle') THEN 1 ELSE 0 END) as vehicles,
+                    COUNT(*) as total
+                FROM detections 
+                WHERE detected_at >= DATE('now', '-7 days')
+                GROUP BY DATE(detected_at)
+                ORDER BY date DESC
+            ''')
         
         rows = cursor.fetchall()
         conn.close()
@@ -529,7 +580,65 @@ class Database:
             })
         
         return result
+    
+    # Bookmark operations
+    def add_bookmark(self, user_id: int, camera_id: int, timestamp: str, 
+                     name: str = None, image_path: str = None, note: str = None) -> int:
+        """Add a bookmark (favorite moment)."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO bookmarks (user_id, camera_id, name, timestamp, image_path, note)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (user_id, camera_id, name, timestamp, image_path, note))
+        
+        bookmark_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        logger.info(f"Bookmark {bookmark_id} added for user {user_id}")
+        return bookmark_id
+    
+    def get_bookmarks(self, user_id: int) -> List[Dict[str, Any]]:
+        """Get all bookmarks for a user."""
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT b.*, c.name as camera_name 
+            FROM bookmarks b
+            LEFT JOIN cameras c ON b.camera_id = c.id
+            WHERE b.user_id = ?
+            ORDER BY b.created_at DESC
+        ''', (user_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    
+    def delete_bookmark(self, bookmark_id: int, user_id: int) -> bool:
+        """Delete a bookmark (only if owned by user)."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                DELETE FROM bookmarks WHERE id = ? AND user_id = ?
+            ''', (bookmark_id, user_id))
+            
+            deleted = cursor.rowcount > 0
+            conn.commit()
+            conn.close()
+            
+            if deleted:
+                logger.info(f"Bookmark {bookmark_id} deleted for user {user_id}")
+            return deleted
+        except Exception as e:
+            logger.error(f"Error deleting bookmark: {e}")
+            return False
 
 # Global database instance
 db = Database()
+
 

@@ -17,7 +17,7 @@ from utils.config import GEMINI_API_KEY
 class GeminiAI:
     """Google Gemini AI for intelligent conversations."""
     
-    API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+    API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
     
     def __init__(self):
         self.api_key = GEMINI_API_KEY
@@ -148,13 +148,32 @@ Agar hozirgi kameralarda qidirish kerak:
                 timeout=30
             )
             
+            
             if response.status_code != 200:
                 logger.error(f"Gemini API error: {response.status_code} - {response.text}")
+                
+                # Import messages untuk error details
+                from utils.messages import msg
+                
+                # Detailed error based on status code
+                if response.status_code == 404:
+                    error_text = f"{msg.AI_ERROR_404_TITLE}\n\n{msg.AI_ERROR_404_WHAT}\n\n{msg.AI_ERROR_404_WHY}\n\n{msg.AI_ERROR_404_FIX}"
+                elif response.status_code == 429:
+                    error_text = f"{msg.AI_ERROR_429_TITLE}\n\n{msg.AI_ERROR_429_WHAT}\n\n{msg.AI_ERROR_429_WHY}\n\n{msg.AI_ERROR_429_FIX}"
+                elif response.status_code == 500 or response.status_code >= 500:
+                    error_text = f"{msg.AI_ERROR_500_TITLE}\n\n{msg.AI_ERROR_500_WHAT}\n\n{msg.AI_ERROR_500_WHY}\n\n{msg.AI_ERROR_500_FIX}"
+                elif response.status_code == 401 or response.status_code == 403:
+                    error_text = f"{msg.AI_ERROR_AUTH_TITLE}\n\n{msg.AI_ERROR_AUTH_WHAT}\n\n{msg.AI_ERROR_AUTH_WHY}\n\n{msg.AI_ERROR_AUTH_FIX}"
+                else:
+                    error_text = f"{msg.AI_ERROR_UNKNOWN_TITLE}\n\n{msg.AI_ERROR_UNKNOWN_WHAT}\n\n{msg.AI_ERROR_UNKNOWN_WHY}\n\n{msg.AI_ERROR_UNKNOWN_FIX}\n\n📝 Texnik maǵlıw: HTTP {response.status_code}"
+                
                 return {
                     'success': False,
-                    'text': f"❌ AI xatosi: {response.status_code}",
-                    'action': None
+                    'text': error_text,
+                    'action': None,
+                    'show_main_menu': True  # Flag to show main menu button
                 }
+
             
             result = response.json()
             
@@ -200,8 +219,10 @@ Agar hozirgi kameralarda qidirish kerak:
             json_match = re.search(r'```json\n(.*?)\n```', text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(1))
-        except:
-            pass
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON parse error in AI response: {e}")
+        except Exception as e:
+            logger.warning(f"Action parse error: {e}")
         
         return {}
     
