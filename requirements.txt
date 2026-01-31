@@ -1,0 +1,49 @@
+# Telegram Bot
+python-telegram-bot==20.7
+python-dotenv==1.0.0
+
+# Universal Camera Integration
+opencv-python-headless==4.8.1.78
+ffmpeg-python==0.2.0
+requests==2.31.0
+urllib3==2.1.0
+
+# AI & Computer Vision (YOLOv8 with latest PyTorch for Python 3.14)
+torch>=2.9.0
+torchvision>=0.20.0
+ultralytics>=8.3.0
+
+# Core dependencies - PINNED numpy<2 for compatibility
+numpy>=1.24.0,<2.0.0
+pillow>=10.0.0
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+aiohttp==3.9.1
+
+# Deploy health server
+fastapi==0.104.1
+uvicorn==0.24.0
+
+# Hugging Face Spaces requirement
+gradio>=4.0.0
+
+# ========== ADVANCED AI FEATURES ==========
+
+# Face Recognition
+face_recognition>=1.3.0
+deepface>=0.0.79
+
+# License Plate OCR
+easyocr>=1.7.0
+
+# Clothing Recognition (CLIP)
+transformers>=4.35.0
+sentence-transformers>=2.2.0
+
+# Anomaly Detection (uses scipy for statistical analysis)
+scipy>=1.11.0
+
+# Google Generative AI
+google-generativeai>=0.3.0

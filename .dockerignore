@@ -1,0 +1,34 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+cache/
+
+# Environment files (secrets handled separately)
+.env
+.env.local
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Data (will be created in container)
+data/
+
+# Temporary files
+*.tmp
+*.temp
