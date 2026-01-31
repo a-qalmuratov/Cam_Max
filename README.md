@@ -7,7 +7,6 @@
 ![YOLOv8](https://img.shields.io/badge/YOLOv8-Detection-orange?style=for-the-badge)
 ![Gemini AI](https://img.shields.io/badge/Gemini-AI%20Powered-purple?style=for-the-badge&logo=google)
 
-**🇺🇿 O'zbekiston uchun yaratilgan super aqlli video kuzatuv Telegram boti**
 
 [Telegram Bot](https://t.me/Cam_Max_Bot) • [Muallif](https://t.me/a_qalmuratov) • [Hujjatlar](#-hujjatlar)
 
@@ -225,8 +224,5 @@ MIT License - Batafsil [LICENSE](LICENSE) faylida.
 
 <div align="center">
 
-**⭐ Yoqsa, yulduzcha qo'ying! ⭐**
-
-Made with ❤️ in Uzbekistan 🇺🇿
 
 </div>
